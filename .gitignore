@@ -18,3 +18,7 @@ __pycache__/
 
 # 临时产物
 _task/
+
+# 运行日志
+logs/
+backend/logs/

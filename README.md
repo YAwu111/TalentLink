@@ -46,6 +46,12 @@ npm run dev
 访问令牌 1 分钟、刷新令牌 7 天，都放在 httpOnly Cookie 里；刷新采用轮换 + 盗用检测。
 设计说明见 [认证设计](docs/认证设计.md)。
 
+## 运行日志
+
+控制台 + `backend/logs/app.log`（INFO 及以上）+ `backend/logs/error.log`（仅 ERROR），按天轮转保留 14 天。
+每个请求生成 12 位 `request_id`，通过响应头 `X-Request-ID` 回传，排查时 `grep <id> logs/app.log`
+即可还原该请求的完整链路。设计说明见 [运行日志](docs/运行日志.md)。
+
 ## 目录约定
 
 ```

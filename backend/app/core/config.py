@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     # SQLite 仅用于课程设计演示，切换 MySQL 只需改这一行
     DATABASE_URL: str = "sqlite:///./talentlink.db"
 
-    JWT_SECRET: str = "talentlink-dev-secret"
+    JWT_SECRET: str = "talentlink-dev-secret-change-me-0123456789abcdef"
     JWT_ALGORITHM: str = "HS256"
     JWT_ISSUER: str = "talentlink"
     JWT_AUDIENCE: str = "talentlink-web"
@@ -28,6 +28,12 @@ class Settings(BaseSettings):
     # Cookie 策略：开发环境走 http，生产必须置 true
     COOKIE_SECURE: bool = False
     COOKIE_SAMESITE: str = "lax"
+
+    # 日志
+    LOG_LEVEL: str = "INFO"
+    LOG_DIR: str = "logs"
+    LOG_TO_FILE: bool = True
+    LOG_BACKUP_DAYS: int = 14
 
     CORS_ORIGINS: list[str] = [
         "http://localhost:5173",

@@ -9,9 +9,15 @@ import router from './router'
 import pinia from './stores'
 import './styles/index.css'
 
-createApp(App)
-  .use(pinia)
-  .use(router)
-  .use(ElementPlus, { locale: zhCn })
-  .use(MotionPlugin)
-  .mount('#app')
+const app = createApp(App)
+
+// 统一兜底：页面级异常和未捕获的 Promise 异常都留下带时间戳的痕迹，方便对照后端日志
+app.config.errorHandler = (err, _instance, info) => {
+  console.error(`[vue-error ${new Date().toISOString()}] ${info}`, err)
+}
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error(`[promise-error ${new Date().toISOString()}]`, event.reason)
+})
+
+app.use(pinia).use(router).use(ElementPlus, { locale: zhCn }).use(MotionPlugin).mount('#app')

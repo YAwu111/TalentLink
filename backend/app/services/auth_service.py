@@ -1,5 +1,6 @@
 """认证业务逻辑：与 HTTP 层解耦，路由只负责取参和写 Cookie。"""
 
+import logging
 from datetime import date, datetime, timedelta, timezone
 
 from fastapi import Request
@@ -16,6 +17,8 @@ from app.core.security import (
 )
 from app.models import Company, RefreshToken, Role, Seeker, User, UserStatus
 from app.schemas.auth import RegisterRequest
+
+logger = logging.getLogger("talentlink.auth")
 
 
 class AuthError(Exception):
@@ -119,6 +122,7 @@ def register(db: Session, payload: RegisterRequest) -> User:
         )
     db.commit()
     db.refresh(user)
+    logger.info("新用户注册 id=%s username=%s role=%s", user.id, user.username, user.role.value)
     return user
 
 
@@ -126,12 +130,15 @@ def authenticate(db: Session, username: str, password: str) -> User:
     user = db.scalar(select(User).where(User.username == username))
     # 统一错误文案，不暴露"用户名不存在"这一信息
     if user is None or not verify_password(password, user.password_hash):
+        logger.warning("登录失败 username=%s 原因=凭据错误", username)
         raise AuthError(401, "用户名或密码错误")
     if user.status is not UserStatus.active:
+        logger.warning("登录失败 username=%s 原因=账号被禁用", username)
         raise AuthError(403, "账号已被禁用")
 
     user.last_login_at = _utcnow()
     db.commit()
+    logger.info("登录成功 id=%s username=%s role=%s", user.id, user.username, user.role.value)
     return user
 
 
@@ -167,6 +174,11 @@ def rotate_session(db: Session, raw_refresh: str, request: Request) -> tuple[Use
 
     now = _utcnow()
     if row.revoked_at is not None:
+        logger.warning(
+            "刷新令牌重用 user_id=%s token_id=%s，吊销该用户全部会话",
+            row.user_id,
+            row.id,
+        )
         db.execute(
             update(RefreshToken)
             .where(RefreshToken.user_id == row.user_id, RefreshToken.revoked_at.is_(None))
@@ -176,6 +188,7 @@ def rotate_session(db: Session, raw_refresh: str, request: Request) -> tuple[Use
         raise AuthError(401, "检测到令牌异常使用，请重新登录")
 
     if row.expires_at <= now:
+        logger.info("刷新令牌过期 user_id=%s token_id=%s", row.user_id, row.id)
         raise AuthError(401, "登录已过期，请重新登录")
 
     user = db.get(User, row.user_id)
@@ -198,6 +211,8 @@ def rotate_session(db: Session, raw_refresh: str, request: Request) -> tuple[Use
     row.replaced_by = new_row.id
     db.commit()
 
+    logger.debug("刷新令牌轮换 user_id=%s %s -> %s", user.id, row.id, new_row.id)
+
     access = create_access_token(user.id, user.role.value)
     return user, access, new_raw
 
@@ -211,3 +226,4 @@ def revoke_session(db: Session, raw_refresh: str) -> None:
     if row and row.revoked_at is None:
         row.revoked_at = _utcnow()
         db.commit()
+        logger.info("用户登出 user_id=%s token_id=%s", row.user_id, row.id)
