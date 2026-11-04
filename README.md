@@ -25,6 +25,21 @@ npm run dev
 
 访问：http://localhost:5173 ，开发期 `/api` 由 Vite 代理到 8000 端口。
 
+## 演示账号
+
+| 角色 | 账号 | 密码 |
+|---|---|---|
+| 系统管理员 | `yawu1122345` | `dev123123` |
+| 企业 | `hr_xinghe` / `hr_lanwan` | `demo123` |
+| 求职者 | `seeker_liming` / `seeker_wangfang` | `demo123` |
+
+账号由 `backend/app/db/seed.py` 在后端启动时幂等写入（已存在则跳过）。
+
+## 数据库
+
+默认 SQLite（`backend/talentlink.db`），切换 MySQL 只需修改 `.env` 中的 `DATABASE_URL`。
+表结构与设计说明见 [数据库设计](D:\TalentLink\docs\数据库设计.md)。
+
 ## 目录约定
 
 ```

@@ -27,6 +27,12 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
     ]
 
+    # 管理员固定账号，由后端启动时写入数据库（密码只存哈希）
+    ADMIN_USERNAME: str = "yawu1122345"
+    ADMIN_PASSWORD: str = "dev123123"
+    # 是否同时写入演示数据，正式部署时关掉
+    SEED_DEMO: bool = True
+
 
 @lru_cache
 def get_settings() -> Settings:

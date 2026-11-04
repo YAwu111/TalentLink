@@ -3,16 +3,20 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+import app.models  # noqa: F401  确保建表前所有模型已注册到 metadata
 from app.api.router import api_router
 from app.core.config import settings
 from app.db.base import Base
-from app.db.session import engine
+from app.db.seed import run_seed
+from app.db.session import SessionLocal, engine
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 课程设计阶段用 create_all 建表；后续接入 Alembic 再替换
     Base.metadata.create_all(bind=engine)
+    with SessionLocal() as db:
+        run_seed(db)
     yield
 
 
