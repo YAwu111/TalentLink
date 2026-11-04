@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { Link, useBlocker } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useBlocker, useLocation, useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
   BadgeCheck,
   Check,
+  CheckCircle2,
   LoaderCircle,
   RefreshCw,
   ShieldCheck,
@@ -72,7 +73,23 @@ export function CompanyProfilePage() {
 
   const editor = useCompanyProfileEditor()
   const [leaving, setLeaving] = useState(false)
+  const [appliedNotice, setAppliedNotice] = useState<number | null>(null)
   const user = useAuthStore((state) => state.user)
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const state = location.state as { applied?: number } | null
+    if (!state?.applied) return
+    setAppliedNotice(state.applied)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, location.state, navigate])
+
+  useEffect(() => {
+    if (!appliedNotice) return
+    const timer = window.setTimeout(() => setAppliedNotice(null), 6000)
+    return () => window.clearTimeout(timer)
+  }, [appliedNotice])
 
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
@@ -151,6 +168,15 @@ export function CompanyProfilePage() {
           <ModeSwitch value="manual" />
         </div>
       </header>
+
+      {appliedNotice ? (
+        <Alert className="mt-6 border-emerald-200/80 bg-emerald-50 text-emerald-900">
+          <CheckCircle2 />
+          <AlertDescription className="text-emerald-900/90">
+            已应用 {appliedNotice} 个识别字段，修改已自动保存。
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       {!editor.completeness.isComplete ? (
         <Alert className="mt-6 border-amber-200/80 bg-amber-50 text-amber-900">

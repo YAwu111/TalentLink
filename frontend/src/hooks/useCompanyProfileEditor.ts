@@ -8,6 +8,7 @@ import {
   type CompanyField,
   type CompanyFormValues,
 } from '@/lib/company'
+import { syncEmployerProfile } from '@/lib/auth-sync'
 import { errorText } from '@/lib/error'
 
 const DEBOUNCE_MS = 800
@@ -118,6 +119,7 @@ export function useCompanyProfileEditor(): CompanyEditor {
     try {
       const updated = await companyApi.patch(snapshot)
       if (!mountedRef.current) return true
+      syncEmployerProfile(updated)
 
       for (const field of fields) {
         const sentValue = snapshot[field]

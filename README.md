@@ -7,7 +7,7 @@
 - 认证：JWT 访问令牌（1 分钟）+ 数据库刷新令牌（7 天，轮换 + 盗用检测），全部走 httpOnly Cookie
 - 目录：`frontend/` 前端工程，`backend/` 后端工程，`docs/` 设计文档
 
-> 当前进度：认证与权限模块、企业资料手动完善（字段级自动保存 + 完整度闸门）；文档识别与身份验证上传将在下一阶段接入。
+> 当前进度：认证与权限模块、企业资料手动完善（字段级自动保存 + 完整度闸门）、资料上传前端联调（mock 识别 + 字段勾选应用 + 身份材料模拟提交）；真实识别/上传后端待接入。
 
 ## 启动后端
 
@@ -28,6 +28,9 @@ npm run dev
 ```
 
 访问：http://localhost:5173 ，开发期 `/api` 由 Vite 代理到 8000 端口。
+
+资料上传的识别适配器默认使用本地 mock；如需切换，复制 `frontend/.env.example` 为
+`frontend/.env.local` 并设置 `VITE_RECOGNITION_PROVIDER=http`（真实接口接入后启用）。
 
 ## 演示账号
 
@@ -87,8 +90,9 @@ frontend/src/
     motion/   Motion 动效封装
     auth/     认证业务组件
     company/  企业资料业务组件
+    upload/   上传、识别结果与身份材料组件
   layouts/    登录后的通用布局与顶栏
-  pages/      页面（登录、注册、工作台、企业资料）
+  pages/      页面（登录、注册、工作台、企业资料、资料上传）
   router/     路由与导航守卫
   stores/     Zustand 认证状态
   hooks/      通用与业务 Hook
