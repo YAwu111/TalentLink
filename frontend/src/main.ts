@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import ElementPlus from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import 'element-plus/dist/index.css'
+import { MotionPlugin } from '@vueuse/motion'
 
 import App from './App.vue'
 import router from './router'
@@ -12,4 +13,5 @@ createApp(App)
   .use(pinia)
   .use(router)
   .use(ElementPlus, { locale: zhCn })
+  .use(MotionPlugin)
   .mount('#app')

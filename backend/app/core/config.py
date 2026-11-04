@@ -20,7 +20,14 @@ class Settings(BaseSettings):
 
     JWT_SECRET: str = "talentlink-dev-secret"
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 720
+    JWT_ISSUER: str = "talentlink"
+    JWT_AUDIENCE: str = "talentlink-web"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # Cookie 策略：开发环境走 http，生产必须置 true
+    COOKIE_SECURE: bool = False
+    COOKIE_SAMESITE: str = "lax"
 
     CORS_ORIGINS: list[str] = [
         "http://localhost:5173",

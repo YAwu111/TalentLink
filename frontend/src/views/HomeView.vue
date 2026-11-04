@@ -1,70 +1,190 @@
-<script setup>
-import { onMounted, ref } from 'vue'
-import http from '@/api/http'
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { SwitchButton } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
 
-const status = ref('checking')
-const info = ref(null)
+import { useAuthStore } from '@/stores/auth'
 
-onMounted(async () => {
-  try {
-    info.value = await http.get('/health')
-    status.value = 'ok'
-  } catch {
-    status.value = 'error'
-  }
-})
+const auth = useAuthStore()
+const router = useRouter()
+
+const ROLE_LABEL: Record<string, string> = {
+  seeker: '求职者',
+  employer: '企业',
+  admin: '系统管理员',
+}
+
+const roleLabel = computed(() => (auth.role ? ROLE_LABEL[auth.role] : ''))
+const profile = computed(() => auth.user?.profile ?? {})
+
+const nextSteps = [
+  '岗位发布与检索（企业侧）',
+  '简历投递与状态流转（求职者侧）',
+  '简历解析与智能匹配（双向推送）',
+  '管理员驾驶舱与测试台',
+]
+
+async function handleLogout() {
+  await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+    confirmButtonText: '退出',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).catch(() => 'cancel')
+  await auth.logout()
+  await router.replace({ name: 'login' })
+}
 </script>
 
 <template>
-  <div class="boot">
-    <el-card class="boot__card" shadow="never">
-      <h1 class="boot__title">TalentLink</h1>
-      <p class="boot__subtitle">网上招聘系统的设计与实现 · 编号 020</p>
+  <div class="home">
+    <header class="topbar">
+      <div class="topbar__brand">
+        <span class="topbar__logo">T</span>
+        <span class="topbar__name">TalentLink</span>
+      </div>
 
-      <el-descriptions :column="1" border class="boot__desc">
-        <el-descriptions-item label="前端">Vue 3 + Vite + Element Plus</el-descriptions-item>
-        <el-descriptions-item label="后端">FastAPI + SQLAlchemy</el-descriptions-item>
-        <el-descriptions-item label="接口连通">
-          <el-tag v-if="status === 'ok'" type="success">正常</el-tag>
-          <el-tag v-else-if="status === 'error'" type="danger">失败</el-tag>
-          <el-tag v-else type="info">检测中</el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item v-if="info" label="服务">
-          {{ info.app }} v{{ info.version }}
-        </el-descriptions-item>
-      </el-descriptions>
-    </el-card>
+      <div class="topbar__user">
+        <el-tag effect="dark" round>{{ roleLabel }}</el-tag>
+        <span class="topbar__username">{{ auth.displayName }}</span>
+        <el-button text :icon="SwitchButton" @click="handleLogout">退出</el-button>
+      </div>
+    </header>
+
+    <main class="content">
+      <section
+        v-motion
+        class="welcome"
+        :initial="{ opacity: 0, y: 20 }"
+        :enter="{ opacity: 1, y: 0, transition: { duration: 420 } }"
+      >
+        <h1>你好，{{ auth.displayName }}</h1>
+        <p>登录成功。当前账号已完成认证，可以开始使用系统。</p>
+      </section>
+
+      <el-row :gutter="20">
+        <el-col :xs="24" :md="14">
+          <el-card
+            v-motion
+            shadow="never"
+            class="panel"
+            :initial="{ opacity: 0, y: 24 }"
+            :enter="{ opacity: 1, y: 0, transition: { delay: 90, duration: 420 } }"
+          >
+            <template #header>
+              <span class="panel__title">账号信息</span>
+            </template>
+            <el-descriptions :column="1" border>
+              <el-descriptions-item label="用户名">
+                {{ auth.user?.username }}
+              </el-descriptions-item>
+              <el-descriptions-item label="角色">{{ roleLabel }}</el-descriptions-item>
+              <el-descriptions-item
+                v-for="(value, key) in profile"
+                :key="key"
+                :label="String(key)"
+              >
+                {{ value || '—' }}
+              </el-descriptions-item>
+            </el-descriptions>
+          </el-card>
+        </el-col>
+
+        <el-col :xs="24" :md="10">
+          <el-card
+            v-motion
+            shadow="never"
+            class="panel"
+            :initial="{ opacity: 0, y: 24 }"
+            :enter="{ opacity: 1, y: 0, transition: { delay: 180, duration: 420 } }"
+          >
+            <template #header>
+              <span class="panel__title">接下来的模块</span>
+            </template>
+            <ul class="steps">
+              <li v-for="item in nextSteps" :key="item">{{ item }}</li>
+            </ul>
+          </el-card>
+        </el-col>
+      </el-row>
+    </main>
   </div>
 </template>
 
 <style scoped>
-.boot {
+.home {
   min-height: 100vh;
+  background: var(--tl-bg);
+}
+
+.topbar {
+  height: 64px;
+  padding: 0 28px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: #f5f7fa;
-  padding: 24px;
+  justify-content: space-between;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06);
 }
 
-.boot__card {
-  width: 100%;
-  max-width: 560px;
-  border-radius: 12px;
+.topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 18px;
 }
 
-.boot__title {
-  margin: 0;
+.topbar__logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(140deg, #1d4ed8, #0ea5e9);
+}
+
+.topbar__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar__username {
+  font-size: 14px;
+  color: var(--tl-muted);
+}
+
+.content {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 24px 56px;
+}
+
+.welcome h1 {
+  margin: 0 0 8px;
   font-size: 28px;
-  color: #303133;
 }
 
-.boot__subtitle {
-  margin: 8px 0 24px;
-  color: #909399;
+.welcome p {
+  margin: 0 0 24px;
+  color: var(--tl-muted);
 }
 
-.boot__desc :deep(.el-descriptions__label) {
-  width: 96px;
+.panel {
+  border-radius: var(--tl-radius);
+  margin-bottom: 20px;
+}
+
+.panel__title {
+  font-weight: 600;
+}
+
+.steps {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--tl-muted);
+  line-height: 2;
 }
 </style>

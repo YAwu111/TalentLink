@@ -2,9 +2,10 @@
 
 软件工程课程设计（编号 020）：网上招聘系统的设计与实现。
 
-- 前端：Vue 3 + Vite + Vue Router + Pinia + Element Plus + Axios
+- 前端：Vue 3 + TypeScript + Vite + Vue Router + Pinia + Element Plus + @vueuse/motion + Axios
 - 后端：FastAPI + SQLAlchemy 2.x + SQLite（可切换 MySQL）
-- 目录：`frontend/` 前端工程，`backend/` 后端工程
+- 认证：JWT 访问令牌（1 分钟）+ 数据库刷新令牌（7 天，轮换 + 盗用检测），全部走 httpOnly Cookie
+- 目录：`frontend/` 前端工程，`backend/` 后端工程，`docs/` 设计文档
 
 ## 启动后端
 
@@ -38,7 +39,12 @@ npm run dev
 ## 数据库
 
 默认 SQLite（`backend/talentlink.db`），切换 MySQL 只需修改 `.env` 中的 `DATABASE_URL`。
-表结构与设计说明见 [数据库设计](D:\TalentLink\docs\数据库设计.md)。
+表结构与设计说明见 [数据库设计](docs/数据库设计.md)。
+
+## 认证
+
+访问令牌 1 分钟、刷新令牌 7 天，都放在 httpOnly Cookie 里；刷新采用轮换 + 盗用检测。
+设计说明见 [认证设计](docs/认证设计.md)。
 
 ## 目录约定
 
@@ -46,12 +52,16 @@ npm run dev
 backend/app/
   api/        路由层（按业务域拆分 router）
   core/       配置、安全等基础设施
-  db/         会话、模型基类
+  db/         会话、模型基类、种子数据
+  models/     ORM 模型
+  schemas/    Pydantic 出入参
+  services/   业务逻辑
 frontend/src/
-  api/        请求封装
-  views/      页面
+  api/        请求封装（含 401 单飞刷新）
   components/ 可复用组件
-  router/     路由
-  stores/     全局状态
+  views/      页面
+  router/     路由与导航守卫
+  stores/     Pinia 状态
   styles/     全局样式
+docs/         课程设计文档
 ```

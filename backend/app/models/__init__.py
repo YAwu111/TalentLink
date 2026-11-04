@@ -5,6 +5,7 @@ from app.models.company import Company
 from app.models.enums import ApplicationStatus, JobStatus, Role, UserStatus
 from app.models.job import Job
 from app.models.offer import Offer
+from app.models.refresh_token import RefreshToken
 from app.models.seeker import Seeker
 from app.models.user import User
 
@@ -15,6 +16,7 @@ __all__ = [
     "Job",
     "JobStatus",
     "Offer",
+    "RefreshToken",
     "Role",
     "Seeker",
     "User",
