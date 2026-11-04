@@ -1,9 +1,13 @@
-import { computed, ref } from 'vue'
-import { defineStore } from 'pinia'
+import { create } from 'zustand'
 
 import { authApi } from '@/api/auth'
 import { refreshSession } from '@/api/http'
-import type { AuthResult, AuthUser, LoginPayload, RegisterPayload } from '@/api/types'
+import type {
+  AuthResult,
+  AuthUser,
+  LoginPayload,
+  RegisterPayload,
+} from '@/api/types'
 
 /** 提前多少秒续期，避免请求恰好撞在过期瞬间 */
 const REFRESH_LEAD_SECONDS = 15
@@ -14,17 +18,20 @@ const REFRESH_LEAD_SECONDS = 15
  */
 const ACCESS_TTL_FALLBACK_SECONDS = 60
 
-export const useAuthStore = defineStore('auth', () => {
-  const user = ref<AuthUser | null>(null)
-  const bootstrapped = ref(false)
-  const submitting = ref(false)
+interface AuthState {
+  user: AuthUser | null
+  bootstrapped: boolean
+  submitting: boolean
+  bootstrap: () => Promise<void>
+  login: (payload: LoginPayload) => Promise<void>
+  register: (payload: RegisterPayload) => Promise<void>
+  logout: () => Promise<void>
+}
 
-  let refreshTimer: number | undefined
+let refreshTimer: number | undefined
+let booting: Promise<void> | null = null
 
-  const isAuthenticated = computed(() => user.value !== null)
-  const role = computed(() => user.value?.role ?? null)
-  const displayName = computed(() => user.value?.display_name ?? '')
-
+export const useAuthStore = create<AuthState>((set, get) => {
   function clearRefreshTimer() {
     if (refreshTimer !== undefined) {
       window.clearTimeout(refreshTimer)
@@ -32,7 +39,11 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  /** 按服务端返回的有效期安排下一次静默续期 */
+  function clear() {
+    clearRefreshTimer()
+    set({ user: null })
+  }
+
   function scheduleRefresh(expiresIn: number) {
     clearRefreshTimer()
     const delay = Math.max(expiresIn - REFRESH_LEAD_SECONDS, 5) * 1000
@@ -41,65 +52,72 @@ export const useAuthStore = defineStore('auth', () => {
       if (result) {
         applySession(result)
       } else {
-        user.value = null
-        clearRefreshTimer()
+        clear()
       }
     }, delay)
   }
 
   function applySession(result: AuthResult) {
-    user.value = result.user
+    set({ user: result.user })
     scheduleRefresh(result.expires_in)
   }
 
   /** 登录/注册共用：统一维护提交态，避免按钮重复点击 */
   async function submitSession(action: () => Promise<AuthResult>) {
-    submitting.value = true
+    set({ submitting: true })
     try {
       applySession(await action())
     } finally {
-      submitting.value = false
-    }
-  }
-
-  function login(payload: LoginPayload) {
-    return submitSession(() => authApi.login(payload))
-  }
-
-  function register(payload: RegisterPayload) {
-    return submitSession(() => authApi.register(payload))
-  }
-
-  async function logout() {
-    try {
-      await authApi.logout()
-    } finally {
-      user.value = null
-      clearRefreshTimer()
-    }
-  }
-
-  /** 应用启动时恢复会话：访问令牌可能已过期，http 层会自动续期一次 */
-  async function bootstrap() {
-    if (bootstrapped.value) return
-    bootstrapped.value = true
-    try {
-      user.value = await authApi.me()
-      scheduleRefresh(ACCESS_TTL_FALLBACK_SECONDS)
-    } catch {
-      user.value = null
+      set({ submitting: false })
     }
   }
 
   return {
-    user,
-    isAuthenticated,
-    role,
-    displayName,
-    submitting,
-    login,
-    register,
-    logout,
-    bootstrap,
+    user: null,
+    bootstrapped: false,
+    submitting: false,
+
+    async bootstrap() {
+      if (get().bootstrapped) return
+      if (booting) return booting
+      booting = (async () => {
+        try {
+          const user = await authApi.me()
+          set({ user })
+          scheduleRefresh(ACCESS_TTL_FALLBACK_SECONDS)
+        } catch {
+          set({ user: null })
+        } finally {
+          set({ bootstrapped: true })
+          booting = null
+        }
+      })()
+      return booting
+    },
+
+    login(payload) {
+      return submitSession(() => authApi.login(payload))
+    },
+
+    register(payload) {
+      return submitSession(() => authApi.register(payload))
+    },
+
+    async logout() {
+      try {
+        await authApi.logout()
+      } finally {
+        clear()
+      }
+    },
   }
 })
+
+// 访问令牌续期失败时，统一清理登录态
+const sessionWindow = window as Window & { __tlSessionBound?: boolean }
+if (!sessionWindow.__tlSessionBound) {
+  sessionWindow.__tlSessionBound = true
+  window.addEventListener('tl:session-expired', () => {
+    useAuthStore.setState({ user: null })
+  })
+}

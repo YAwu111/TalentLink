@@ -29,5 +29,5 @@ export interface RegisterPayload {
 }
 
 export interface ApiError {
-  detail?: string
+  detail?: string | { msg?: string }[]
 }

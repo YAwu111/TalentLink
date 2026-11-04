@@ -2,10 +2,12 @@
 
 软件工程课程设计（编号 020）：网上招聘系统的设计与实现。
 
-- 前端：Vue 3 + TypeScript + Vite + Vue Router + Pinia + Element Plus + @vueuse/motion + Axios
+- 前端：React 19 + TypeScript + Vite + React Router + Zustand + Axios
 - 后端：FastAPI + SQLAlchemy 2.x + SQLite（可切换 MySQL）
 - 认证：JWT 访问令牌（1 分钟）+ 数据库刷新令牌（7 天，轮换 + 盗用检测），全部走 httpOnly Cookie
 - 目录：`frontend/` 前端工程，`backend/` 后端工程，`docs/` 设计文档
+
+> 当前进度：认证与权限模块，前端已由 Vue 重构为 React；岗位、投递等后续模块保持原计划，不在本次重构范围内。
 
 ## 启动后端
 
@@ -21,6 +23,7 @@ uvicorn app.main:app --reload --port 8000
 
 ```bash
 cd frontend
+npm install
 npm run dev
 ```
 
@@ -74,10 +77,12 @@ backend/app/
   services/   业务逻辑
 frontend/src/
   api/        请求封装（含 401 单飞刷新）
-  components/ 可复用组件
-  views/      页面
+  components/ 可复用组件（品牌面板、表单控件、确认框）
+  pages/      页面（登录、注册、工作台）
   router/     路由与导航守卫
-  stores/     Pinia 状态
-  styles/     全局样式
+  stores/     Zustand 认证状态
+  hooks/      通用 Hook
+  lib/        工具函数
+  styles/     设计变量与全局样式
 docs/         课程设计文档
 ```

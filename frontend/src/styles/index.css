@@ -1,43 +1,4 @@
-:root {
-  --tl-bg: #f4f7fb;
-  --tl-ink: #1f2937;
-  --tl-muted: #6b7280;
-  --tl-brand: #1d4ed8;
-  --tl-brand-deep: #1e3a8a;
-  --tl-radius: 14px;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#app {
-  height: 100%;
-}
-
-body {
-  margin: 0;
-  background: var(--tl-bg);
-  color: var(--tl-ink);
-  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', Arial,
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-a {
-  color: var(--tl-brand);
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-.el-button--primary {
-  --el-button-bg-color: var(--tl-brand);
-  --el-button-border-color: var(--tl-brand);
-  --el-button-hover-bg-color: #2563eb;
-  --el-button-hover-border-color: #2563eb;
-}
+@import './tokens.css';
+@import './base.css';
+@import './auth.css';
+@import './home.css';

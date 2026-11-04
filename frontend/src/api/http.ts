@@ -1,5 +1,7 @@
-import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
-import { ElMessage } from 'element-plus'
+import axios, {
+  type AxiosError,
+  type InternalAxiosRequestConfig,
+} from 'axios'
 
 import type { ApiError, AuthResult } from './types'
 
@@ -9,7 +11,7 @@ import type { ApiError, AuthResult } from './types'
  */
 const http = axios.create({
   baseURL: '/api',
-  timeout: 10000,
+  timeout: 12000,
   withCredentials: true,
 })
 
@@ -17,7 +19,7 @@ interface RetriableConfig extends InternalAxiosRequestConfig {
   _retried?: boolean
 }
 
-/** 除登录/注册/刷新/登出外，其余接口在 401 时都值得先尝试续期一次 */
+/** 登录/注册/刷新/登出自身不参与 401 重试，避免递归 */
 const AUTH_ENDPOINTS = /\/auth\/(login|register|refresh|logout)/
 
 let refreshPromise: Promise<AuthResult | null> | null = null
@@ -44,8 +46,7 @@ http.interceptors.response.use(
   async (error: AxiosError<ApiError>) => {
     const config = error.config as RetriableConfig | undefined
     const status = error.response?.status
-    const url = config?.url ?? ''
-    const isAuthCall = AUTH_ENDPOINTS.test(url)
+    const isAuthCall = AUTH_ENDPOINTS.test(config?.url ?? '')
 
     if (status === 401 && config && !config._retried && !isAuthCall) {
       config._retried = true
@@ -55,11 +56,11 @@ http.interceptors.response.use(
       }
     }
 
-    // 401 交给上层统一跳登录页，不弹重复提示
-    if (status !== 401) {
-      const detail = error.response?.data?.detail
-      ElMessage.error(typeof detail === 'string' ? detail : '网络异常，请稍后重试')
+    // 刷新也失败，说明会话已不可恢复；通知 store 清理登录态
+    if (status === 401 && !isAuthCall) {
+      window.dispatchEvent(new Event('tl:session-expired'))
     }
+
     return Promise.reject(error)
   },
 )

@@ -15,11 +15,11 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "types": ["vite/client", "node"],
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "vite.config.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]
 }
