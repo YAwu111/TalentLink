@@ -8,6 +8,12 @@ import type { AuthResult, AuthUser, LoginPayload, RegisterPayload } from '@/api/
 /** 提前多少秒续期，避免请求恰好撞在过期瞬间 */
 const REFRESH_LEAD_SECONDS = 15
 
+/**
+ * 会话恢复时拿不到服务端的 expires_in（/auth/me 只返回用户），
+ * 按后端 ACCESS_TOKEN_EXPIRE_MINUTES=1 的约定估一个，下一次刷新后会回到精确值。
+ */
+const ACCESS_TTL_FALLBACK_SECONDS = 60
+
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<AuthUser | null>(null)
   const bootstrapped = ref(false)
@@ -46,22 +52,22 @@ export const useAuthStore = defineStore('auth', () => {
     scheduleRefresh(result.expires_in)
   }
 
-  async function login(payload: LoginPayload) {
+  /** 登录/注册共用：统一维护提交态，避免按钮重复点击 */
+  async function submitSession(action: () => Promise<AuthResult>) {
     submitting.value = true
     try {
-      applySession(await authApi.login(payload))
+      applySession(await action())
     } finally {
       submitting.value = false
     }
   }
 
-  async function register(payload: RegisterPayload) {
-    submitting.value = true
-    try {
-      applySession(await authApi.register(payload))
-    } finally {
-      submitting.value = false
-    }
+  function login(payload: LoginPayload) {
+    return submitSession(() => authApi.login(payload))
+  }
+
+  function register(payload: RegisterPayload) {
+    return submitSession(() => authApi.register(payload))
   }
 
   async function logout() {
@@ -79,7 +85,7 @@ export const useAuthStore = defineStore('auth', () => {
     bootstrapped.value = true
     try {
       user.value = await authApi.me()
-      scheduleRefresh(60)
+      scheduleRefresh(ACCESS_TTL_FALLBACK_SECONDS)
     } catch {
       user.value = null
     }
