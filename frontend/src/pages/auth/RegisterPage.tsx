@@ -1,14 +1,23 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { AlertCircle, Building2, Lock, User, UserRound } from 'lucide-react'
+import {
+  AlertCircle,
+  Building2,
+  LoaderCircle,
+  Lock,
+  User,
+  UserRound,
+} from 'lucide-react'
 
 import { AuthShell } from '@/components/auth/AuthShell'
-import { Button } from '@/components/ui/Button'
-import { Field } from '@/components/ui/Field'
-import { Input } from '@/components/ui/Input'
-import { PasswordInput } from '@/components/ui/PasswordInput'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { errorText } from '@/lib/error'
+import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth'
 
 type RegisterRole = 'seeker' | 'employer'
@@ -19,6 +28,16 @@ interface RegisterErrors {
   password?: string
   confirm?: string
 }
+
+const ROLE_OPTIONS: Array<{
+  value: RegisterRole
+  label: string
+  hint: string
+  icon: typeof UserRound
+}> = [
+  { value: 'seeker', label: '我是求职者', hint: '个人求职账号', icon: UserRound },
+  { value: 'employer', label: '我是企业', hint: '企业招聘账号', icon: Building2 },
+]
 
 export function RegisterPage() {
   usePageTitle('注册')
@@ -76,47 +95,69 @@ export function RegisterPage() {
 
   return (
     <AuthShell subtitle="注册后即可发布岗位或投递简历">
-      <header className="auth-head">
-        <span className="auth-eyebrow">创建账号</span>
-        <h2>注册</h2>
-        <p>选择身份，注册完成后自动登录</p>
+      <header className="mb-7">
+        <p className="text-[11px] font-semibold tracking-[0.16em] text-primary uppercase">
+          创建账号
+        </p>
+        <h2 className="mt-2 text-[28px] leading-tight font-semibold tracking-tight">
+          注册
+        </h2>
+        <p className="mt-2 text-[13.5px] text-muted-foreground">
+          选择身份，注册完成后自动登录
+        </p>
       </header>
 
       {serverError ? (
-        <div className="alert" role="alert">
-          <AlertCircle size={17} />
-          <span>{serverError}</span>
-        </div>
+        <Alert
+          variant="destructive"
+          className="mb-5 border-destructive/20 bg-destructive/5"
+        >
+          <AlertCircle />
+          <AlertDescription>{serverError}</AlertDescription>
+        </Alert>
       ) : null}
 
-      <form className="auth-form" onSubmit={handleSubmit} noValidate>
-        <div className="role-picker" role="radiogroup" aria-label="账号类型">
-          <button
-            type="button"
-            role="radio"
-            aria-checked={isSeeker}
-            className={isSeeker ? 'role-option is-active' : 'role-option'}
-            onClick={() => setRole('seeker')}
-          >
-            <UserRound size={19} />
-            <span>
-              <strong>我是求职者</strong>
-              <small>个人求职账号</small>
-            </span>
-          </button>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={!isSeeker}
-            className={!isSeeker ? 'role-option is-active' : 'role-option'}
-            onClick={() => setRole('employer')}
-          >
-            <Building2 size={19} />
-            <span>
-              <strong>我是企业</strong>
-              <small>企业招聘账号</small>
-            </span>
-          </button>
+      <form className="grid gap-4" onSubmit={handleSubmit} noValidate>
+        <div className="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label="账号类型">
+          {ROLE_OPTIONS.map((option) => {
+            const Icon = option.icon
+            const isActive = role === option.value
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="radio"
+                aria-checked={isActive}
+                className={cn(
+                  'flex items-center gap-2.5 rounded-xl border p-3 text-left transition-all duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+                  isActive
+                    ? 'border-primary bg-primary/5 ring-2 ring-primary/10'
+                    : 'border-border bg-background hover:border-primary/40 hover:bg-muted/50',
+                )}
+                onClick={() => setRole(option.value)}
+              >
+                <Icon
+                  className={cn(
+                    'size-5 shrink-0',
+                    isActive ? 'text-primary' : 'text-muted-foreground',
+                  )}
+                />
+                <span className="min-w-0">
+                  <span
+                    className={cn(
+                      'block text-[12.5px] font-semibold',
+                      isActive ? 'text-primary' : 'text-foreground',
+                    )}
+                  >
+                    {option.label}
+                  </span>
+                  <span className="mt-0.5 block text-[10.5px] text-muted-foreground">
+                    {option.hint}
+                  </span>
+                </span>
+              </button>
+            )
+          })}
         </div>
 
         <Field
@@ -125,18 +166,21 @@ export function RegisterPage() {
           error={errors.username}
           required
         >
-          <Input
-            id="register-username"
-            autoComplete="username"
-            placeholder="3-32 位字母、数字或下划线"
-            icon={<User size={16} />}
-            invalid={Boolean(errors.username)}
-            value={username}
-            onChange={(event) => {
-              setUsername(event.target.value)
-              clearError('username')
-            }}
-          />
+          <div className="relative">
+            <User className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="register-username"
+              autoComplete="username"
+              placeholder="3-32 位字母、数字或下划线"
+              className="h-11 pl-9"
+              aria-invalid={Boolean(errors.username) || undefined}
+              value={username}
+              onChange={(event) => {
+                setUsername(event.target.value)
+                clearError('username')
+              }}
+            />
+          </div>
         </Field>
 
         <Field
@@ -145,17 +189,24 @@ export function RegisterPage() {
           error={errors.displayName}
           required
         >
-          <Input
-            id="register-name"
-            placeholder={isSeeker ? '请输入真实姓名' : '请输入企业名称'}
-            icon={isSeeker ? <UserRound size={16} /> : <Building2 size={16} />}
-            invalid={Boolean(errors.displayName)}
-            value={displayName}
-            onChange={(event) => {
-              setDisplayName(event.target.value)
-              clearError('displayName')
-            }}
-          />
+          <div className="relative">
+            {isSeeker ? (
+              <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            ) : (
+              <Building2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            )}
+            <Input
+              id="register-name"
+              placeholder={isSeeker ? '请输入真实姓名' : '请输入企业名称'}
+              className="h-11 pl-9"
+              aria-invalid={Boolean(errors.displayName) || undefined}
+              value={displayName}
+              onChange={(event) => {
+                setDisplayName(event.target.value)
+                clearError('displayName')
+              }}
+            />
+          </div>
         </Field>
 
         <Field
@@ -168,7 +219,7 @@ export function RegisterPage() {
             id="register-password"
             autoComplete="new-password"
             placeholder="至少 6 位"
-            icon={<Lock size={16} />}
+            icon={<Lock className="size-4" />}
             invalid={Boolean(errors.password)}
             value={password}
             onChange={(value) => {
@@ -188,7 +239,7 @@ export function RegisterPage() {
             id="register-confirm"
             autoComplete="new-password"
             placeholder="请再次输入密码"
-            icon={<Lock size={16} />}
+            icon={<Lock className="size-4" />}
             invalid={Boolean(errors.confirm)}
             value={confirm}
             onChange={(value) => {
@@ -200,18 +251,30 @@ export function RegisterPage() {
 
         <Button
           type="submit"
-          block
-          loading={submitting}
-          className="auth-submit"
+          size="lg"
+          className="mt-1 w-full"
+          disabled={submitting}
         >
-          注 册
+          {submitting ? (
+            <>
+              <LoaderCircle className="animate-spin" />
+              正在注册…
+            </>
+          ) : (
+            '注 册'
+          )}
         </Button>
       </form>
 
-      <footer className="auth-foot">
-        <span>已有账号？</span>
-        <Link to="/login">返回登录</Link>
-      </footer>
+      <p className="mt-6 text-center text-[13px] text-muted-foreground">
+        已有账号？
+        <Link
+          to="/login"
+          className="ml-1 font-medium text-primary underline-offset-4 hover:underline"
+        >
+          返回登录
+        </Link>
+      </p>
     </AuthShell>
   )
 }

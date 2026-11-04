@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 
+import { Label } from '@/components/ui/label'
+
 interface FieldProps {
   label: string
   htmlFor: string
@@ -18,16 +20,18 @@ export function Field({
   children,
 }: FieldProps) {
   return (
-    <div className="field">
-      <label className="field__label" htmlFor={htmlFor}>
+    <div className="grid gap-2">
+      <Label htmlFor={htmlFor}>
         {label}
-        {required ? <span className="field__required">*</span> : null}
-      </label>
+        {required ? <span className="text-destructive">*</span> : null}
+      </Label>
       {children}
       {error ? (
-        <span className="field__error">{error}</span>
+        <p className="text-xs leading-relaxed text-destructive" role="alert">
+          {error}
+        </p>
       ) : hint ? (
-        <span className="field__hint">{hint}</span>
+        <p className="text-xs leading-relaxed text-muted-foreground">{hint}</p>
       ) : null}
     </div>
   )

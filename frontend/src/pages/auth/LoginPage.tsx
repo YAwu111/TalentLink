@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { AlertCircle, Lock, User } from 'lucide-react'
+import { AlertCircle, LoaderCircle, Lock, User } from 'lucide-react'
 
 import { AuthShell } from '@/components/auth/AuthShell'
-import { Button } from '@/components/ui/Button'
-import { Field } from '@/components/ui/Field'
-import { Input } from '@/components/ui/Input'
-import { PasswordInput } from '@/components/ui/PasswordInput'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { errorText } from '@/lib/error'
 import { useAuthStore } from '@/stores/auth'
@@ -71,36 +72,48 @@ export function LoginPage() {
 
   return (
     <AuthShell>
-      <header className="auth-head">
-        <span className="auth-eyebrow">欢迎回来</span>
-        <h2>登录</h2>
-        <p>使用求职者、企业或管理员账号进入系统</p>
+      <header className="mb-7">
+        <p className="text-[11px] font-semibold tracking-[0.16em] text-primary uppercase">
+          欢迎回来
+        </p>
+        <h2 className="mt-2 text-[28px] leading-tight font-semibold tracking-tight">
+          登录
+        </h2>
+        <p className="mt-2 text-[13.5px] text-muted-foreground">
+          使用求职者、企业或管理员账号进入系统
+        </p>
       </header>
 
       {serverError ? (
-        <div className="alert" role="alert">
-          <AlertCircle size={17} />
-          <span>{serverError}</span>
-        </div>
+        <Alert
+          variant="destructive"
+          className="mb-5 border-destructive/20 bg-destructive/5"
+        >
+          <AlertCircle />
+          <AlertDescription>{serverError}</AlertDescription>
+        </Alert>
       ) : null}
 
-      <form className="auth-form" onSubmit={handleSubmit} noValidate>
+      <form className="grid gap-4" onSubmit={handleSubmit} noValidate>
         <Field
           label="用户名"
           htmlFor="login-username"
           error={errors.username}
           required
         >
-          <Input
-            id="login-username"
-            autoComplete="username"
-            autoFocus
-            placeholder="请输入用户名"
-            icon={<User size={16} />}
-            invalid={Boolean(errors.username)}
-            value={username}
-            onChange={(event) => changeUsername(event.target.value)}
-          />
+          <div className="relative">
+            <User className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="login-username"
+              autoComplete="username"
+              autoFocus
+              placeholder="请输入用户名"
+              className="h-11 pl-9"
+              aria-invalid={Boolean(errors.username) || undefined}
+              value={username}
+              onChange={(event) => changeUsername(event.target.value)}
+            />
+          </div>
         </Field>
 
         <Field
@@ -112,7 +125,7 @@ export function LoginPage() {
           <PasswordInput
             id="login-password"
             placeholder="请输入密码"
-            icon={<Lock size={16} />}
+            icon={<Lock className="size-4" />}
             invalid={Boolean(errors.password)}
             value={password}
             onChange={changePassword}
@@ -121,27 +134,40 @@ export function LoginPage() {
 
         <Button
           type="submit"
-          block
-          loading={submitting}
-          className="auth-submit"
+          size="lg"
+          className="mt-1 w-full"
+          disabled={submitting}
         >
-          登 录
+          {submitting ? (
+            <>
+              <LoaderCircle className="animate-spin" />
+              正在登录…
+            </>
+          ) : (
+            '登 录'
+          )}
         </Button>
       </form>
 
-      <footer className="auth-foot">
-        <span>还没有账号？</span>
-        <Link to="/register">立即注册</Link>
-      </footer>
+      <p className="mt-6 text-center text-[13px] text-muted-foreground">
+        还没有账号？
+        <Link
+          to="/register"
+          className="ml-1 font-medium text-primary underline-offset-4 hover:underline"
+        >
+          立即注册
+        </Link>
+      </p>
 
-      <div className="demo">
-        <span className="demo__title">演示账号（点击填充）</span>
-        <div className="demo__list">
+      <div className="mt-7 border-t border-dashed border-border pt-5">
+        <p className="text-[11.5px] text-muted-foreground">演示账号（点击填充）</p>
+        <div className="mt-2.5 grid gap-2 sm:grid-cols-3">
           {DEMO_ACCOUNTS.map((account) => (
-            <button
+            <Button
               key={account.username}
               type="button"
-              className="demo__chip"
+              variant="outline"
+              className="h-auto flex-col items-start justify-start gap-0.5 px-3 py-2 text-left font-normal"
               onClick={() => {
                 setUsername(account.username)
                 setPassword(account.password)
@@ -149,9 +175,13 @@ export function LoginPage() {
                 setServerError('')
               }}
             >
-              <strong>{account.label}</strong>
-              <span>{account.username}</span>
-            </button>
+              <span className="text-xs font-semibold text-foreground">
+                {account.label}
+              </span>
+              <span className="w-full truncate text-[10.5px] text-muted-foreground">
+                {account.username}
+              </span>
+            </Button>
           ))}
         </div>
       </div>

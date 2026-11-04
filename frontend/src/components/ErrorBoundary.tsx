@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
-import { AlertCircle } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
 
 interface Props {
   children: ReactNode
@@ -24,20 +26,18 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="crash">
-          <div className="crash__card">
-            <span className="crash__icon">
-              <AlertCircle size={26} />
-            </span>
-            <h1>页面出了点问题</h1>
-            <p>错误已记录到浏览器控制台，刷新后可继续使用。</p>
-            <button
-              type="button"
-              className="btn btn--primary"
-              onClick={() => window.location.reload()}
-            >
+        <div className="grid min-h-[100dvh] place-items-center bg-background p-6">
+          <div className="w-full max-w-md rounded-2xl border border-border/70 bg-card p-8 text-center shadow-[0_24px_60px_-24px_rgba(15,23,42,0.2)]">
+            <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-destructive/10 text-destructive">
+              <AlertTriangle className="size-7" />
+            </div>
+            <h1 className="text-xl font-semibold tracking-tight">页面出了点问题</h1>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              错误已记录到浏览器控制台，刷新后可继续使用。
+            </p>
+            <Button className="mt-6" onClick={() => window.location.reload()}>
               刷新页面
-            </button>
+            </Button>
           </div>
         </div>
       )
