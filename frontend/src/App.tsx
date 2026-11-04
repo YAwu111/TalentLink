@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
-import { BrowserRouter } from 'react-router-dom'
+import { RouterProvider } from 'react-router-dom'
 import { MotionConfig } from 'motion/react'
 
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { AppRouter } from '@/router/AppRouter'
+import { router } from '@/router/AppRouter'
 import { useAuthStore } from '@/stores/auth'
 
 export default function App() {
@@ -16,9 +16,7 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <ErrorBoundary>
-        <BrowserRouter>
-          <AppRouter />
-        </BrowserRouter>
+        <RouterProvider router={router} />
       </ErrorBoundary>
     </MotionConfig>
   )

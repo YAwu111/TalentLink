@@ -72,7 +72,7 @@ def serialize_user(user: User) -> dict:
         }
     elif user.role == Role.employer and user.company is not None:
         item_company: Company = user.company
-        display_name = item_company.name
+        display_name = item_company.name or user.username
         profile = {
             "id": item_company.id,
             "name": item_company.name,

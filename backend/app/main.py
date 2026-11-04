@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 import app.models  # noqa: F401  确保建表前所有模型已注册到 metadata
 from app.api.router import api_router
 from app.core.config import settings
+from app.core.errors import ServiceError
 from app.core.logging import logger, reset_request_id, set_request_id, setup_logging
 from app.db.base import Base
 from app.db.seed import run_seed
@@ -59,6 +60,18 @@ def create_app() -> FastAPI:
         expose_headers=["X-Request-ID"],
     )
     app.include_router(api_router, prefix=settings.API_PREFIX)
+
+    @app.exception_handler(ServiceError)
+    async def handle_service_error(request: Request, exc: ServiceError):
+        """服务层抛出的可预期错误，统一回填 request_id。"""
+        logger.warning(
+            "业务异常 %s %s -> %s: %s",
+            request.method,
+            request.url.path,
+            exc.status_code,
+            exc.detail,
+        )
+        return _error_response(request, exc.status_code, exc.detail)
 
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(request: Request, exc: RequestValidationError):

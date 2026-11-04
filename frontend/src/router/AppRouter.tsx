@@ -1,6 +1,12 @@
 import { lazy, Suspense, type ReactNode } from 'react'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import {
+  createBrowserRouter,
+  Navigate,
+  Outlet,
+  useLocation,
+} from 'react-router-dom'
 
+import { AppLayout } from '@/layouts/AppLayout'
 import { BootScreen } from '@/components/ui/boot-screen'
 import { useAuthStore } from '@/stores/auth'
 
@@ -15,8 +21,18 @@ const RegisterPage = lazy(() =>
 const HomePage = lazy(() =>
   import('@/pages/HomePage').then((module) => ({ default: module.HomePage })),
 )
+const CompanyProfilePage = lazy(() =>
+  import('@/pages/employer/CompanyProfilePage').then((module) => ({
+    default: module.CompanyProfilePage,
+  })),
+)
+const CompanyUploadPage = lazy(() =>
+  import('@/pages/employer/CompanyUploadPage').then((module) => ({
+    default: module.CompanyUploadPage,
+  })),
+)
 
-function ProtectedRoute({ children }: { children: ReactNode }) {
+function ProtectedLayout() {
   const user = useAuthStore((state) => state.user)
   const bootstrapped = useAuthStore((state) => state.bootstrapped)
   const location = useLocation()
@@ -26,48 +42,65 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
     const redirect = `${location.pathname}${location.search}`
     return <Navigate to={`/login?redirect=${encodeURIComponent(redirect)}`} replace />
   }
-  return children
+  return <Outlet />
 }
 
-function GuestOnlyRoute({ children }: { children: ReactNode }) {
+function GuestOnlyLayout() {
   const user = useAuthStore((state) => state.user)
   const bootstrapped = useAuthStore((state) => state.bootstrapped)
 
   if (!bootstrapped) return <BootScreen />
   if (user) return <Navigate to="/" replace />
+  return <Outlet />
+}
+
+function RoleGate({ role, children }: { role: string; children: ReactNode }) {
+  const user = useAuthStore((state) => state.user)
+  if (!user || user.role !== role) return <Navigate to="/" replace />
   return children
 }
 
-export function AppRouter() {
-  return (
-    <Suspense fallback={<BootScreen />}>
-      <Routes>
-        <Route
-          path="/login"
-          element={
-            <GuestOnlyRoute>
-              <LoginPage />
-            </GuestOnlyRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <GuestOnlyRoute>
-              <RegisterPage />
-            </GuestOnlyRoute>
-          }
-        />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
-  )
+function authFallback(node: ReactNode) {
+  return <Suspense fallback={<BootScreen />}>{node}</Suspense>
 }
+
+export const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <GuestOnlyLayout />,
+    children: [{ index: true, element: authFallback(<LoginPage />) }],
+  },
+  {
+    path: '/register',
+    element: <GuestOnlyLayout />,
+    children: [{ index: true, element: authFallback(<RegisterPage />) }],
+  },
+  {
+    element: <ProtectedLayout />,
+    children: [
+      {
+        element: <AppLayout />,
+        children: [
+          { index: true, element: <HomePage /> },
+          {
+            path: 'employer/profile',
+            element: (
+              <RoleGate role="employer">
+                <CompanyProfilePage />
+              </RoleGate>
+            ),
+          },
+          {
+            path: 'employer/profile/upload',
+            element: (
+              <RoleGate role="employer">
+                <CompanyUploadPage />
+              </RoleGate>
+            ),
+          },
+        ],
+      },
+    ],
+  },
+  { path: '*', element: <Navigate to="/" replace /> },
+])

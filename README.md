@@ -7,7 +7,7 @@
 - 认证：JWT 访问令牌（1 分钟）+ 数据库刷新令牌（7 天，轮换 + 盗用检测），全部走 httpOnly Cookie
 - 目录：`frontend/` 前端工程，`backend/` 后端工程，`docs/` 设计文档
 
-> 当前进度：认证与权限模块；前端已由 Vue 迁移至 React + shadcn/ui + Tailwind CSS + Motion，岗位、投递等后续模块保持原计划。
+> 当前进度：认证与权限模块、企业资料手动完善（字段级自动保存 + 完整度闸门）；文档识别与身份验证上传将在下一阶段接入。
 
 ## 启动后端
 
@@ -59,6 +59,11 @@ DATABASE_URL=mysql+pymysql://root:your_password@127.0.0.1:3306/talentlink?charse
 访问令牌 1 分钟、刷新令牌 7 天，都放在 httpOnly Cookie 里；刷新采用轮换 + 盗用检测。
 设计说明见 [认证设计](docs/认证设计.md)。
 
+## 企业资料
+
+企业资料支持字段级自动保存与资料完整度计算；完整度作为后续投递/推送的闸门。
+设计说明见 [企业资料与文档识别设计](docs/企业资料设计.md)。
+
 ## 运行日志
 
 控制台 + `backend/logs/app.log`（INFO 及以上）+ `backend/logs/error.log`（仅 ERROR），按天轮转保留 14 天。
@@ -81,10 +86,12 @@ frontend/src/
     ui/       shadcn/ui 基础组件
     motion/   Motion 动效封装
     auth/     认证业务组件
-  pages/      页面（登录、注册、工作台）
+    company/  企业资料业务组件
+  layouts/    登录后的通用布局与顶栏
+  pages/      页面（登录、注册、工作台、企业资料）
   router/     路由与导航守卫
   stores/     Zustand 认证状态
-  hooks/      通用 Hook
+  hooks/      通用与业务 Hook
   lib/        工具函数
   index.css   Tailwind 主题与 shadcn 设计变量
 docs/         课程设计文档
