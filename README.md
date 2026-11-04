@@ -38,7 +38,17 @@ npm run dev
 
 ## 数据库
 
-默认 SQLite（`backend/talentlink.db`），切换 MySQL 只需修改 `.env` 中的 `DATABASE_URL`。
+首次运行先复制配置：`copy backend\.env.example backend\.env`（默认连 SQLite，零配置即可跑）。
+
+演示与本地开发用 SQLite（`backend/talentlink.db`），**正式演示切 MySQL**，只改 `.env` 一行：
+
+```ini
+DATABASE_URL=mysql+pymysql://root:your_password@127.0.0.1:3306/talentlink?charset=utf8mb4
+```
+
+切换前先建库（`CREATE DATABASE talentlink DEFAULT CHARSET utf8mb4;`），驱动 `PyMySQL` 已在
+`requirements.txt` 中，启动时 `create_all` 会自动建表并写入种子数据。
+
 表结构与设计说明见 [数据库设计](docs/数据库设计.md)。
 
 ## 认证

@@ -5,18 +5,19 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import settings
 
-connect_args = (
-    {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
-)
+# SQLite 与 MySQL 的连接参数差异集中在这里，切换数据库只改 .env 的 DATABASE_URL
+IS_SQLITE = settings.DATABASE_URL.startswith("sqlite")
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args=connect_args,
-    pool_pre_ping=True,
-    echo=False,
-)
+engine_options: dict = {"pool_pre_ping": True, "echo": False}
+if IS_SQLITE:
+    engine_options["connect_args"] = {"check_same_thread": False}
+else:
+    # MySQL 默认 8 小时断开空闲连接，取更短的回收周期，避免拿到已失效的连接
+    engine_options.update(pool_recycle=1800, pool_size=5, max_overflow=10)
 
-if settings.DATABASE_URL.startswith("sqlite"):
+engine = create_engine(settings.DATABASE_URL, **engine_options)
+
+if IS_SQLITE:
 
     @event.listens_for(engine, "connect")
     def _enable_sqlite_foreign_keys(dbapi_connection, _record):
