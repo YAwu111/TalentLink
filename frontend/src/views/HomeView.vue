@@ -15,8 +15,42 @@ const ROLE_LABEL: Record<string, string> = {
   admin: '系统管理员',
 }
 
+/** 档案字段的中文名，缺省回退到原始 key，避免后台新增字段时界面上露出英文 */
+const PROFILE_LABEL: Record<string, string> = {
+  name: '名称',
+  gender: '性别',
+  age: '年龄',
+  birth_date: '出生日期',
+  phone: '联系电话',
+  email: '邮箱',
+  household: '户籍所在地',
+  education: '学历',
+  major: '专业',
+  degree: '学位',
+  school: '毕业院校',
+  skills: '业务技能',
+  address: '企业地址',
+  industry: '所属行业',
+  intro: '企业简介',
+  verified: '是否认证',
+}
+
 const roleLabel = computed(() => (auth.role ? ROLE_LABEL[auth.role] : ''))
-const profile = computed(() => auth.user?.profile ?? {})
+
+const profileEntries = computed(() =>
+  Object.entries(auth.user?.profile ?? {}).map(([key, value]) => ({
+    key,
+    label: PROFILE_LABEL[key] ?? key,
+    text:
+      typeof value === 'boolean'
+        ? value
+          ? '是'
+          : '否'
+        : typeof value === 'string' && value.trim()
+          ? value
+          : '—',
+  })),
+)
 
 const nextSteps = [
   '岗位发布与检索（企业侧）',
@@ -26,11 +60,16 @@ const nextSteps = [
 ]
 
 async function handleLogout() {
-  await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
-    confirmButtonText: '退出',
-    cancelButtonText: '取消',
-    type: 'warning',
-  }).catch(() => 'cancel')
+  try {
+    await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+      confirmButtonText: '退出',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+  } catch {
+    // 用户取消：ElMessageBox 以 reject 表示取消，直接返回
+    return
+  }
   await auth.logout()
   await router.replace({ name: 'login' })
 }
@@ -80,11 +119,11 @@ async function handleLogout() {
               </el-descriptions-item>
               <el-descriptions-item label="角色">{{ roleLabel }}</el-descriptions-item>
               <el-descriptions-item
-                v-for="(value, key) in profile"
-                :key="key"
-                :label="String(key)"
+                v-for="item in profileEntries"
+                :key="item.key"
+                :label="item.label"
               >
-                {{ value || '—' }}
+                {{ item.text }}
               </el-descriptions-item>
             </el-descriptions>
           </el-card>

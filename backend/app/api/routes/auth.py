@@ -35,7 +35,9 @@ def _clear_auth_cookies(response: Response) -> None:
 
 
 def _auth_result(user: User) -> AuthResult:
-    return AuthResult(user=UserOut(**auth_service.serialize_user(user)), expires_in=ACCESS_MAX_AGE)
+    return AuthResult(
+        user=UserOut(**auth_service.serialize_user(user)), expires_in=ACCESS_MAX_AGE
+    )
 
 
 @router.post("/register", response_model=AuthResult, status_code=status.HTTP_201_CREATED)
@@ -74,7 +76,9 @@ def login(
 
 
 @router.post("/refresh", response_model=AuthResult)
-def refresh(request: Request, response: Response, db: Session = Depends(get_db)) -> AuthResult:
+def refresh(
+    request: Request, response: Response, db: Session = Depends(get_db)
+) -> AuthResult:
     raw = request.cookies.get(REFRESH_COOKIE)
     if not raw:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="缺少刷新令牌")
@@ -90,7 +94,9 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-def logout(request: Request, response: Response, db: Session = Depends(get_db)) -> Response:
+def logout(
+    request: Request, response: Response, db: Session = Depends(get_db)
+) -> Response:
     raw = request.cookies.get(REFRESH_COOKIE)
     if raw:
         auth_service.revoke_session(db, raw)

@@ -16,10 +16,6 @@ LOG_FORMAT = "%(asctime)s | %(levelname)-7s | %(request_id)s | %(name)s | %(mess
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def get_request_id() -> str:
-    return request_id_var.get()
-
-
 def set_request_id(value: str) -> contextvars.Token[str]:
     return request_id_var.set(value)
 

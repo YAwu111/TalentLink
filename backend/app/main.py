@@ -8,13 +8,28 @@ from fastapi.responses import JSONResponse
 import app.models  # noqa: F401  确保建表前所有模型已注册到 metadata
 from app.api.router import api_router
 from app.core.config import settings
-from app.core.logging import get_request_id, logger, setup_logging
+from app.core.logging import logger, reset_request_id, set_request_id, setup_logging
 from app.db.base import Base
 from app.db.seed import run_seed
 from app.db.session import SessionLocal, engine
 from app.middleware.request_log import RequestLogMiddleware
 
 setup_logging()
+
+
+def _request_id(request: Request) -> str:
+    """错误处理器运行在中间件之外，contextvar 已被重置，只能从 state 取。"""
+    return getattr(request.state, "request_id", "-")
+
+
+def _error_response(request: Request, status_code: int, detail: object) -> JSONResponse:
+    """统一错误响应：request_id 同时写入响应体和响应头，保证前端截图即可定位日志。"""
+    request_id = _request_id(request)
+    return JSONResponse(
+        status_code=status_code,
+        content={"detail": detail, "request_id": request_id},
+        headers={"X-Request-ID": request_id},
+    )
 
 
 @asynccontextmanager
@@ -50,21 +65,17 @@ def create_app() -> FastAPI:
         logger.warning(
             "参数校验失败 %s %s: %s", request.method, request.url.path, exc.errors()
         )
-        return JSONResponse(
-            status_code=422,
-            content={"detail": exc.errors(), "request_id": get_request_id()},
-        )
+        return _error_response(request, 422, exc.errors())
 
     @app.exception_handler(Exception)
     async def handle_unexpected_error(request: Request, exc: Exception):
-        logger.exception("未捕获异常 %s %s", request.method, request.url.path)
-        return JSONResponse(
-            status_code=500,
-            content={
-                "detail": "服务器内部错误，请稍后重试",
-                "request_id": get_request_id(),
-            },
-        )
+        # 异常发生在本中间件之外，日志上下文已失效，这里临时补回同一个 ID
+        token = set_request_id(_request_id(request))
+        try:
+            logger.exception("未捕获异常 %s %s", request.method, request.url.path)
+        finally:
+            reset_request_id(token)
+        return _error_response(request, 500, "服务器内部错误，请稍后重试")
 
     @app.get("/", include_in_schema=False)
     def index() -> dict:

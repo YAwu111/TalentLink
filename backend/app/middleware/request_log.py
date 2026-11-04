@@ -19,6 +19,9 @@ class RequestLogMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex[:12]
+        # 同时写进 state：异常处理器运行在中间件之外（ServerErrorMiddleware），
+        # 那里 contextvar 已被重置，只能从这里取回同一个 ID
+        request.state.request_id = request_id
         token = set_request_id(request_id)
 
         started = time.perf_counter()
