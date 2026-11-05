@@ -2,7 +2,16 @@
 
 from app.models.application import Application
 from app.models.company import Company
-from app.models.enums import ApplicationStatus, JobStatus, Role, UserStatus
+from app.models.document import CompanyDocument, CompanyVerification
+from app.models.enums import (
+    ApplicationStatus,
+    DocumentCategory,
+    DocumentStatus,
+    JobStatus,
+    Role,
+    UserStatus,
+    VerificationStatus,
+)
 from app.models.job import Job
 from app.models.offer import Offer
 from app.models.refresh_token import RefreshToken
@@ -13,6 +22,10 @@ __all__ = [
     "Application",
     "ApplicationStatus",
     "Company",
+    "CompanyDocument",
+    "CompanyVerification",
+    "DocumentCategory",
+    "DocumentStatus",
     "Job",
     "JobStatus",
     "Offer",
@@ -21,4 +34,5 @@ __all__ = [
     "Seeker",
     "User",
     "UserStatus",
+    "VerificationStatus",
 ]

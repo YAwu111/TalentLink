@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = False
     COOKIE_SAMESITE: str = "lax"
 
+    # 文件上传：相对 backend 工作目录；生产环境应换到持久化/对象存储
+    UPLOAD_DIR: str = "uploads"
+
     # 日志
     LOG_LEVEL: str = "INFO"
     LOG_DIR: str = "logs"

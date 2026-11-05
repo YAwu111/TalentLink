@@ -39,3 +39,22 @@ class ApplicationStatus(str, enum.Enum):
     interview = "interview"
     offered = "offered"
     rejected = "rejected"
+
+
+class DocumentCategory(str, enum.Enum):
+    intro = "intro"
+    identity = "identity"
+
+
+class DocumentStatus(str, enum.Enum):
+    stored = "stored"
+    processing = "processing"
+    parsed = "parsed"
+    failed = "failed"
+
+
+class VerificationStatus(str, enum.Enum):
+    pending = "pending"
+    approved = "approved"
+    rejected = "rejected"
+    revoked = "revoked"
