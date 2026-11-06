@@ -2,7 +2,11 @@ import { LoaderCircle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import type { RecognitionStage } from '@/api/recognition'
+import {
+  identityProvider,
+  recognitionProvider,
+  type RecognitionStage,
+} from '@/api/recognition'
 
 interface UploadProgressProps {
   stage: RecognitionStage
@@ -18,6 +22,10 @@ export function UploadProgress({
   kind = 'recognition',
 }: UploadProgressProps) {
   const isUploading = stage === 'uploading'
+  const isMock =
+    kind === 'identity'
+      ? identityProvider.id === 'mock'
+      : recognitionProvider.id === 'mock'
   const title =
     kind === 'identity'
       ? '正在上传身份材料…'
@@ -39,9 +47,13 @@ export function UploadProgress({
       <Progress value={progress} className="mt-3 h-2" />
       <div className="mt-3 flex items-center justify-between gap-3">
         <p className="text-[11px] text-muted-foreground">
-          {kind === 'identity'
-            ? '联调模拟：不会上传真实文件'
-            : '联调模拟：不会读取文件内容'}
+          {isMock
+            ? kind === 'identity'
+              ? '联调模拟：不会上传真实文件'
+              : '联调模拟：不会读取文件内容'
+            : kind === 'identity'
+              ? '材料已上传，等待管理员审核'
+              : '本地 OCR/规则识别，不调用外部模型'}
         </p>
         {onCancel ? (
           <Button type="button" variant="ghost" size="sm" onClick={onCancel}>

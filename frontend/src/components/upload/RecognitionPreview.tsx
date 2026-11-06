@@ -40,7 +40,13 @@ export function RecognitionPreview({
         <Badge variant="info">
           置信度 {Math.round(result.confidence * 100)}%
         </Badge>
-        <Badge variant="neutral">模拟数据</Badge>
+        <Badge variant="neutral">
+          {result.transport === 'mock'
+            ? '模拟数据'
+            : result.provider === 'local'
+              ? '本地识别'
+              : '识别结果'}
+        </Badge>
         <span className="text-xs text-muted-foreground">
           识别到 {recognizedCount} 项
         </span>

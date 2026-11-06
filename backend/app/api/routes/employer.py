@@ -37,7 +37,7 @@ def patch_company(
     "/company/documents",
     response_model=CompanyDocumentOut,
     status_code=status.HTTP_202_ACCEPTED,
-    summary="上传企业介绍文档并触发模拟识别",
+    summary="上传企业介绍文档并触发本地识别",
 )
 async def upload_company_document(
     background_tasks: BackgroundTasks,
@@ -47,7 +47,7 @@ async def upload_company_document(
 ) -> CompanyDocumentOut:
     company = company_service.get_company_of(db, user)
     document = await document_service.create_intro_document(db, company, file)
-    background_tasks.add_task(document_service.run_mock_recognition, document.id)
+    background_tasks.add_task(document_service.run_recognition, document.id)
     return document_service.document_out(document)
 
 

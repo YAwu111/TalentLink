@@ -1,8 +1,6 @@
 import logging
 import mimetypes
-import time
 from pathlib import Path
-from typing import Any
 
 from fastapi import UploadFile
 from sqlalchemy import select
@@ -21,23 +19,13 @@ from app.schemas.document import (
     RecognitionResultOut,
 )
 from app.services import storage_service
+from app.services.recognition import RecognitionError, get_provider
 
 logger = logging.getLogger("talentlink.document")
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 INTRO_SUFFIXES = {".pdf", ".docx", ".png", ".jpg", ".jpeg"}
 IDENTITY_SUFFIXES = {".pdf", ".png", ".jpg", ".jpeg"}
-
-MOCK_FIELDS: dict[str, dict[str, Any]] = {
-    "name": {"value": "星河科技（上海）有限公司", "confidence": 0.96},
-    "industry": {"value": "企业服务 / SaaS", "confidence": 0.91},
-    "phone": {"value": "021-58881234", "confidence": 0.88},
-    "address": {"value": "上海市浦东新区张江路 88 号 3 层", "confidence": 0.93},
-    "intro": {
-        "value": "星河科技专注企业级 SaaS 产品研发，团队约 200 人，已完成 B 轮融资。",
-        "confidence": 0.84,
-    },
-}
 
 
 def _safe_filename(filename: str | None) -> str:
@@ -189,20 +177,8 @@ def document_out(document: CompanyDocument) -> CompanyDocumentOut:
     )
 
 
-def _mock_result(document: CompanyDocument) -> dict[str, Any]:
-    return {
-        "provider": "mock",
-        "document_type": "intro",
-        "confidence": 0.92,
-        "fields": MOCK_FIELDS,
-        "warnings": [
-            f"当前为后端联调模拟识别，文件「{document.original_name}」未调用真实识别服务。"
-        ],
-    }
-
-
-def run_mock_recognition(document_id: int) -> None:
-    """BackgroundTasks 任务：独立会话，避免请求会话关闭后继续写库。"""
+def run_recognition(document_id: int) -> None:
+    """BackgroundTasks 任务：真实解析/OCR，独立会话写回结果。"""
     with SessionLocal() as db:
         document = db.get(CompanyDocument, document_id)
         if document is None or document.category is not DocumentCategory.intro:
@@ -213,17 +189,33 @@ def run_mock_recognition(document_id: int) -> None:
             document.error_message = None
             db.commit()
 
-            # 模拟真实识别耗时，让前端能观察到 processing → parsed
-            time.sleep(1.2)
-            document.parsed_data = _mock_result(document)
+            path = storage_service.resolve_path(document.storage_key)
+            if not path.is_file():
+                raise RecognitionError("原始文件不存在，请重新上传")
+
+            result = get_provider().recognize(
+                path, Path(document.original_name).suffix
+            )
+            document.parsed_data = result
             document.parse_status = DocumentStatus.parsed
+            document.error_message = None
             db.commit()
-            logger.info("模拟识别完成 document_id=%s", document_id)
+            logger.info(
+                "文档识别完成 document_id=%s provider=%s confidence=%s",
+                document_id,
+                result.get("provider"),
+                result.get("confidence"),
+            )
         except Exception as exc:
             db.rollback()
-            logger.exception("模拟识别失败 document_id=%s", document_id)
+            logger.exception("文档识别失败 document_id=%s", document_id)
             document = db.get(CompanyDocument, document_id)
             if document is not None:
                 document.parse_status = DocumentStatus.failed
-                document.error_message = f"识别失败：{exc}"[:1000]
+                message = (
+                    str(exc)
+                    if isinstance(exc, RecognitionError)
+                    else "本地识别失败，请检查文档清晰度后重试"
+                )
+                document.error_message = message[:1000]
                 db.commit()

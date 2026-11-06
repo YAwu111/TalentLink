@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { UploadCloud } from 'lucide-react'
 
+import { recognitionProvider } from '@/api/recognition'
 import { categoryFormatLabel, CATEGORY_ACCEPT, type UploadCategory } from '@/lib/file'
 import { cn } from '@/lib/utils'
 
@@ -75,9 +76,13 @@ export function DocumentDropzone({
           支持 {categoryFormatLabel(category)}，单个文件不超过 10MB
         </span>
         <span className="text-[10.5px] text-muted-foreground">
-          {category === 'intro'
-            ? '文件只用于本地模拟识别，不会上传服务器'
-            : '当前为调试验证流程，不会上传服务器'}
+          {recognitionProvider.id === 'mock'
+            ? category === 'intro'
+              ? '文件只用于本地模拟识别，不会上传服务器'
+              : '当前为调试验证流程，不会上传服务器'
+            : category === 'intro'
+              ? '文件会上传到服务器进行本地 OCR/规则识别'
+              : '身份材料会上传到服务器提交审核'}
         </span>
       </button>
     </div>

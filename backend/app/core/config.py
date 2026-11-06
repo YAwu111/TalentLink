@@ -31,6 +31,8 @@ class Settings(BaseSettings):
 
     # 文件上传：相对 backend 工作目录；生产环境应换到持久化/对象存储
     UPLOAD_DIR: str = "uploads"
+    # 识别适配器：local（本地 OCR + 规则）| mock（仅联调）
+    RECOGNITION_PROVIDER: str = "local"
 
     # 日志
     LOG_LEVEL: str = "INFO"

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AlertCircle, ArrowRight, FileSearch, LoaderCircle, RefreshCw } from 'lucide-react'
 
 import { companyApi, type CompanyPatch, type CompanyProfile } from '@/api/company'
+import { recognitionProvider } from '@/api/recognition'
 import { ModeSwitch } from '@/components/company/ModeSwitch'
 import { StaggerText } from '@/components/company/StaggerText'
 import { IdentityUploadPanel } from '@/components/upload/IdentityUploadPanel'
@@ -25,7 +26,7 @@ import type { UploadCategory } from '@/lib/file'
 
 const FLOW_STEPS = [
   { title: '选择文档', description: '企业介绍、营业执照等材料' },
-  { title: '模拟识别', description: '提取企业名称、行业、联系方式等' },
+  { title: '文档识别', description: '本地 OCR/规则提取企业名称、行业、联系方式等' },
   { title: '核对应用', description: '只应用你勾选的字段' },
 ]
 
@@ -37,6 +38,7 @@ export function CompanyUploadPage() {
   const category: UploadCategory =
     params.get('type') === 'identity' ? 'identity' : 'intro'
   const recognition = useDocumentRecognition(category)
+  const isMockRecognition = recognitionProvider.id === 'mock'
 
   const [current, setCurrent] = useState<CompanyProfile | null>(null)
   const [currentLoading, setCurrentLoading] = useState(true)
@@ -133,7 +135,13 @@ export function CompanyUploadPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="neutral">联调模拟</Badge>
+          <Badge variant={isMockRecognition ? 'neutral' : 'success'}>
+            {isMockRecognition
+              ? '联调模拟'
+              : category === 'identity'
+                ? '管理员审核'
+                : '本地识别'}
+          </Badge>
           <ModeSwitch value="upload" />
         </div>
       </header>
@@ -227,7 +235,9 @@ export function CompanyUploadPage() {
                 </Button>
                 {recognition.file ? (
                   <span className="text-xs text-muted-foreground">
-                    只做本地模拟，不会上传服务器
+                    {isMockRecognition
+                      ? '只做本地模拟，不会上传服务器'
+                      : '文件已上传，使用本地 OCR 与规则抽取'}
                   </span>
                 ) : null}
               </div>
@@ -273,8 +283,9 @@ export function CompanyUploadPage() {
                     </span>
                     <h2 className="mt-4 text-sm font-semibold">识别结果会显示在这里</h2>
                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                      当前为联调模拟。选择文件并开始识别后，可以逐字段核对，
-                      只应用你勾选的内容。
+                      {isMockRecognition
+                        ? '当前为联调模拟。选择文件并开始识别后，可以逐字段核对，只应用你勾选的内容。'
+                        : '当前使用本地 OCR 与规则抽取。选择文件并开始识别后，可以逐字段核对，只应用你勾选的内容。'}
                     </p>
                   </div>
                 </div>

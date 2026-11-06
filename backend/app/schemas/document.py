@@ -3,17 +3,35 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class RecognitionSourceOut(BaseModel):
+    page: int | None = None
+    bbox: list[float] | None = None
+    text: str | None = None
+    method: str | None = None
+
+
 class RecognizedFieldOut(BaseModel):
     value: str
     confidence: float
+    source: RecognitionSourceOut | None = None
+
+
+class RecognitionMetaOut(BaseModel):
+    pages: int | None = None
+    ocr_used: bool | None = None
+    text_length: int | None = None
+    duration_ms: int | None = None
 
 
 class RecognitionResultOut(BaseModel):
+    schema_version: str | None = None
     provider: str
+    model: str | None = None
     document_type: str
     confidence: float
     fields: dict[str, RecognizedFieldOut]
     warnings: list[str]
+    meta: RecognitionMetaOut | None = None
 
 
 class CompanyDocumentOut(BaseModel):

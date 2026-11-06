@@ -4,10 +4,11 @@
 
 - 前端：React 19 + TypeScript + Vite + React Router + Zustand + Tailwind CSS 4 + shadcn/ui + Motion + Axios
 - 后端：FastAPI + SQLAlchemy 2.x + SQLite（可切换 MySQL）
+- 识别：PyMuPDF + python-docx + RapidOCR（本地 OCR）+ 规则抽取 + 字段级置信度
 - 认证：JWT 访问令牌（1 分钟）+ 数据库刷新令牌（7 天，轮换 + 盗用检测），全部走 httpOnly Cookie
 - 目录：`frontend/` 前端工程，`backend/` 后端工程，`docs/` 设计文档
 
-> 当前进度：认证与权限、企业资料手动完善（字段级自动保存 + 完整度闸门）、资料上传前端联调（mock 识别 + 字段勾选应用）、企业文档与身份认证后端 B1/B2、管理员审核 B3（列表/详情/通过/驳回/撤销/审计事件）。真实 OCR/LLM、企业端真实身份提交与认证状态展示（B4）待接入。
+> 当前进度：认证与权限、企业资料手动完善（字段级自动保存 + 完整度闸门）、资料上传与真实企业材料流程、企业文档与身份认证后端 B1/B2、管理员审核 B3（列表/详情/通过/驳回/撤销/审计事件）、本地 OCR/规则识别与置信度、前端 HTTP provider 与企业认证状态 B4。LLM 增强、岗位/投递/推送硬阻断待接入。
 
 ## 启动后端
 
@@ -29,8 +30,8 @@ npm run dev
 
 访问：http://localhost:5173 ，开发期 `/api` 由 Vite 代理到 8000 端口。
 
-资料上传的识别适配器默认使用本地 mock；如需切换，复制 `frontend/.env.example` 为
-`frontend/.env.local` 并设置 `VITE_RECOGNITION_PROVIDER=http`（真实接口接入后启用）。
+资料上传默认连接后端本地 OCR/规则识别；如需离线演示，复制 `frontend/.env.example`
+为 `frontend/.env.local` 并设置 `VITE_RECOGNITION_PROVIDER=mock`。
 
 ## 演示账号
 

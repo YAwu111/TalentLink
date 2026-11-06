@@ -5,10 +5,12 @@ import {
   BadgeCheck,
   Check,
   CheckCircle2,
+  Clock3,
   LoaderCircle,
   RefreshCw,
   ShieldCheck,
   Upload,
+  XCircle,
 } from 'lucide-react'
 
 import { CompletenessCard } from '@/components/company/CompletenessCard'
@@ -26,8 +28,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { PageLoading } from '@/components/ui/page-loading'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useCompanyProfileEditor } from '@/hooks/useCompanyProfileEditor'
+import { useVerificationStatus } from '@/hooks/useVerificationStatus'
 import { COMPANY_LABELS, type CompanyField } from '@/lib/company'
-import { formatTime } from '@/lib/format'
+import { formatDateTime, formatTime } from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
 
 interface SaveStatusProps {
@@ -72,6 +75,7 @@ export function CompanyProfilePage() {
   usePageTitle('企业资料')
 
   const editor = useCompanyProfileEditor()
+  const verification = useVerificationStatus()
   const [leaving, setLeaving] = useState(false)
   const [appliedNotice, setAppliedNotice] = useState<number | null>(null)
   const user = useAuthStore((state) => state.user)
@@ -139,6 +143,7 @@ export function CompanyProfilePage() {
   }
 
   const { profile, form } = editor
+  const latestVerification = verification.current
   const missingLabels = editor.completeness.missing
     .map((field: CompanyField) => COMPANY_LABELS[field])
     .join('、')
@@ -301,7 +306,24 @@ export function CompanyProfilePage() {
             </CardHeader>
             <CardContent className="px-5 py-5">
               <div className="flex items-center gap-2">
-                {profile.verified ? (
+                {latestVerification?.status === 'pending' ? (
+                  <Badge variant="warning">
+                    <Clock3 />
+                    待审核
+                  </Badge>
+                ) : latestVerification?.status === 'rejected' ? (
+                  <Badge variant="destructive">
+                    <XCircle />
+                    已驳回
+                  </Badge>
+                ) : latestVerification?.status === 'approved' ? (
+                  <Badge variant="success">
+                    <BadgeCheck />
+                    已认证企业
+                  </Badge>
+                ) : latestVerification?.status === 'revoked' ? (
+                  <Badge variant="neutral">已撤销</Badge>
+                ) : profile.verified ? (
                   <Badge variant="success">
                     <BadgeCheck />
                     已认证企业
@@ -311,12 +333,27 @@ export function CompanyProfilePage() {
                 )}
               </div>
               <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-                身份材料用于管理员审核，不参与资料完整度计算，也不影响岗位展示。
+                {latestVerification?.status === 'pending'
+                  ? `第 ${latestVerification.version} 次认证申请正在等待管理员审核，提交于 ${formatDateTime(latestVerification.submitted_at)}。`
+                  : latestVerification?.status === 'rejected'
+                    ? `驳回原因：${latestVerification.reject_reason || '未填写'}`
+                    : latestVerification?.status === 'approved'
+                      ? `认证已通过${latestVerification.reviewed_at ? `，审核于 ${formatDateTime(latestVerification.reviewed_at)}` : ''}。`
+                      : latestVerification?.status === 'revoked'
+                        ? `认证已撤销：${latestVerification.review_note || '未填写原因'}`
+                        : '身份材料用于管理员审核，不参与资料完整度计算，也不影响岗位展示。'}
               </p>
               <Button variant="outline" size="sm" className="mt-4" asChild>
                 <Link to="/employer/profile/upload?type=identity">
                   <Upload className="size-4" />
-                  上传身份材料
+                  {latestVerification?.status === 'pending'
+                    ? '查看审核状态'
+                    : latestVerification?.status === 'approved'
+                      ? '更新认证材料'
+                      : latestVerification?.status === 'rejected' ||
+                          latestVerification?.status === 'revoked'
+                        ? '重新提交身份材料'
+                        : '上传身份材料'}
                 </Link>
               </Button>
             </CardContent>
