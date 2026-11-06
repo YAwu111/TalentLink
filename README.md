@@ -8,7 +8,35 @@
 - 认证：JWT 访问令牌（1 分钟）+ 数据库刷新令牌（7 天，轮换 + 盗用检测），全部走 httpOnly Cookie
 - 目录：`frontend/` 前端工程，`backend/` 后端工程，`docs/` 设计文档
 
-> 当前进度：认证与权限、企业资料与上传、文档/身份认证 B1/B2、管理员审核 B3、本地 OCR/规则识别与 B4 企业认证状态、求职者资料/工作经历/工作台/简历、真实岗位浏览与投递、企业岗位创建/编辑/发布/关闭。LLM 增强、企业查看投递与状态流转待接入。
+> 当前进度：认证与权限、企业资料与上传、文档/身份认证 B1/B2、管理员审核 B3、本地 OCR/规则识别与 B4 企业认证状态、求职者资料/工作经历/工作台/简历、真实岗位浏览与投递、企业岗位创建/编辑/发布/关闭、企业查看投递简历与状态流转。Offer 与管理员信息管理待接入。
+
+## Docker 一键启动
+
+需要 Docker 与 Docker Compose。
+
+```bash
+copy .env.docker.example .env
+docker compose up -d --build
+```
+
+访问：http://localhost:8080
+
+- 接口文档：http://localhost:8080/docs
+- 前端由 Nginx 托管，`/api` 反向代理到后端
+- SQLite、上传文件、日志统一保存在 named volume `talentlink-data`
+- 首次启动会执行 seed；`SEED_DEMO=false` 可关闭演示数据
+- `.env` 中的 `JWT_SECRET` 和 `ADMIN_PASSWORD` 必须修改后再用于正式演示
+
+常用命令：
+
+```bash
+docker compose ps
+docker compose logs -f backend
+docker compose down
+docker compose down -v   # 同时删除数据库、上传文件和日志
+```
+
+生产环境需要 HTTPS 时，把 `COOKIE_SECURE=true` 并配置 TLS 终止。详细部署说明见 [Docker 部署设计](docs/Docker部署.md)。
 
 ## 启动后端
 
