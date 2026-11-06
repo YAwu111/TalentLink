@@ -31,6 +31,11 @@ const CompanyUploadPage = lazy(() =>
     default: module.CompanyUploadPage,
   })),
 )
+const VerificationReviewPage = lazy(() =>
+  import('@/pages/admin/VerificationReviewPage').then((module) => ({
+    default: module.VerificationReviewPage,
+  })),
+)
 
 function ProtectedLayout() {
   const user = useAuthStore((state) => state.user)
@@ -95,6 +100,14 @@ export const router = createBrowserRouter([
             element: (
               <RoleGate role="employer">
                 <CompanyUploadPage />
+              </RoleGate>
+            ),
+          },
+          {
+            path: 'admin/verifications',
+            element: (
+              <RoleGate role="admin">
+                <VerificationReviewPage />
               </RoleGate>
             ),
           },

@@ -2,7 +2,11 @@
 
 from app.models.application import Application
 from app.models.company import Company
-from app.models.document import CompanyDocument, CompanyVerification
+from app.models.document import (
+    CompanyDocument,
+    CompanyVerification,
+    CompanyVerificationEvent,
+)
 from app.models.enums import (
     ApplicationStatus,
     DocumentCategory,
@@ -24,6 +28,7 @@ __all__ = [
     "Company",
     "CompanyDocument",
     "CompanyVerification",
+    "CompanyVerificationEvent",
     "DocumentCategory",
     "DocumentStatus",
     "Job",

@@ -9,6 +9,7 @@ from app.models import (
     Company,
     CompanyDocument,
     CompanyVerification,
+    CompanyVerificationEvent,
     VerificationStatus,
 )
 from app.schemas.document import (
@@ -51,6 +52,16 @@ def create_verification(
     )
     db.add(verification)
     try:
+        db.flush()
+        db.add(
+            CompanyVerificationEvent(
+                verification_id=verification.id,
+                from_status=None,
+                to_status=VerificationStatus.pending,
+                actor_id=company.user_id,
+                note="企业提交认证申请",
+            )
+        )
         db.commit()
     except IntegrityError as exc:
         db.rollback()

@@ -88,3 +88,27 @@ class CompanyVerification(Base, TimestampMixin):
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     review_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     reject_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class CompanyVerificationEvent(Base):
+    """审核状态流转事件，保证认证审核可追溯。"""
+
+    __tablename__ = "company_verification_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    verification_id: Mapped[int] = mapped_column(
+        ForeignKey("company_verifications.id", ondelete="CASCADE"), index=True
+    )
+    from_status: Mapped[VerificationStatus | None] = mapped_column(
+        str_enum(VerificationStatus, 20), nullable=True
+    )
+    to_status: Mapped[VerificationStatus] = mapped_column(
+        str_enum(VerificationStatus, 20), nullable=False
+    )
+    actor_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), nullable=False
+    )

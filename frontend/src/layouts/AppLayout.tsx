@@ -24,6 +24,10 @@ const EMPLOYER_NAV: NavItem[] = [
   { to: '/employer/profile/upload', label: '资料上传', end: true },
 ]
 
+const ADMIN_NAV: NavItem[] = [
+  { to: '/admin/verifications', label: '认证审核', end: true },
+]
+
 export function AppLayout() {
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
@@ -35,7 +39,12 @@ export function AppLayout() {
   if (!user) return null
 
   const role = ROLE_META[user.role]
-  const items = user.role === 'employer' ? [...BASE_NAV, ...EMPLOYER_NAV] : BASE_NAV
+  const items =
+    user.role === 'employer'
+      ? [...BASE_NAV, ...EMPLOYER_NAV]
+      : user.role === 'admin'
+        ? [...BASE_NAV, ...ADMIN_NAV]
+        : BASE_NAV
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -95,9 +104,11 @@ export function AppLayout() {
 
           <div className="ml-auto flex items-center gap-2">
             <Badge variant={role.badge}>{role.label}</Badge>
-            <span className="hidden max-w-[180px] truncate text-[13px] text-muted-foreground sm:inline">
-              {user.display_name}
-            </span>
+            {user.display_name !== role.label ? (
+              <span className="hidden max-w-[180px] truncate text-[13px] text-muted-foreground sm:inline">
+                {user.display_name}
+              </span>
+            ) : null}
             <Button
               variant="ghost"
               size="sm"
