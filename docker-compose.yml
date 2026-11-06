@@ -1,0 +1,59 @@
+name: talentlink
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    init: true
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: sqlite:////data/talentlink.db
+      UPLOAD_DIR: /data/uploads
+      LOG_DIR: /data/logs
+      LOG_TO_FILE: "true"
+      DEBUG: "false"
+      SEED_DEMO: "${SEED_DEMO:-true}"
+      JWT_SECRET: "${JWT_SECRET:-talentlink-dev-secret-change-me-0123456789abcdef}"
+      ADMIN_USERNAME: "${ADMIN_USERNAME:-yawu1122345}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-dev123123}"
+      COOKIE_SECURE: "${COOKIE_SECURE:-false}"
+      COOKIE_SAMESITE: "${COOKIE_SAMESITE:-lax}"
+      RECOGNITION_PROVIDER: "${RECOGNITION_PROVIDER:-local}"
+    volumes:
+      - talentlink-data:/data
+    expose:
+      - "8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_RECOGNITION_PROVIDER: "${RECOGNITION_PROVIDER:-http}"
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 5s
+
+volumes:
+  talentlink-data:
+    name: talentlink-data
