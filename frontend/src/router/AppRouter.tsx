@@ -36,6 +36,16 @@ const EmployerJobsPage = lazy(() =>
     default: module.EmployerJobsPage,
   })),
 )
+const EmployerApplicationsPage = lazy(() =>
+  import('@/pages/employer/EmployerApplicationsPage').then((module) => ({
+    default: module.EmployerApplicationsPage,
+  })),
+)
+const EmployerApplicationDetailPage = lazy(() =>
+  import('@/pages/employer/EmployerApplicationDetailPage').then((module) => ({
+    default: module.EmployerApplicationDetailPage,
+  })),
+)
 const VerificationReviewPage = lazy(() =>
   import('@/pages/admin/VerificationReviewPage').then((module) => ({
     default: module.VerificationReviewPage,
@@ -138,6 +148,22 @@ export const router = createBrowserRouter([
             element: (
               <RoleGate role="employer">
                 <EmployerJobsPage />
+              </RoleGate>
+            ),
+          },
+          {
+            path: 'employer/applications',
+            element: (
+              <RoleGate role="employer">
+                <EmployerApplicationsPage />
+              </RoleGate>
+            ),
+          },
+          {
+            path: 'employer/applications/:id',
+            element: (
+              <RoleGate role="employer">
+                <EmployerApplicationDetailPage />
               </RoleGate>
             ),
           },

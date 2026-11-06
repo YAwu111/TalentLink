@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   BriefcaseBusiness,
   LoaderCircle,
@@ -206,6 +207,11 @@ export function EmployerJobsPage() {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to={`/employer/applications?job_id=${job.id}`}>
+                      查看投递
+                    </Link>
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
