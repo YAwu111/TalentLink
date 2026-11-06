@@ -28,6 +28,12 @@ const ADMIN_NAV: NavItem[] = [
   { to: '/admin/verifications', label: '认证审核', end: true },
 ]
 
+const SEEKER_NAV: NavItem[] = [
+  { to: '/seeker/profile', label: '个人资料', end: true },
+  { to: '/seeker/jobs', label: '岗位', end: true },
+  { to: '/seeker/applications', label: '我的投递', end: true },
+]
+
 export function AppLayout() {
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
@@ -44,7 +50,9 @@ export function AppLayout() {
       ? [...BASE_NAV, ...EMPLOYER_NAV]
       : user.role === 'admin'
         ? [...BASE_NAV, ...ADMIN_NAV]
-        : BASE_NAV
+        : user.role === 'seeker'
+          ? [...BASE_NAV, ...SEEKER_NAV]
+          : BASE_NAV
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -59,7 +67,7 @@ export function AppLayout() {
 
   return (
     <div className="min-h-[100dvh] bg-background">
-      <header className="sticky top-0 z-30 border-b border-border/70 bg-white/85 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-border/70 bg-white/85 backdrop-blur-md print:hidden">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 md:h-16 md:flex-nowrap md:px-6 md:py-0">
           <Link to="/" className="flex items-center gap-2.5">
             <span className="grid size-9 place-items-center rounded-xl bg-primary text-lg font-bold text-primary-foreground shadow-sm">
@@ -122,7 +130,7 @@ export function AppLayout() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-10">
+      <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-10 print:max-w-none print:p-0">
         <Suspense fallback={<PageLoading />}>
           <Outlet />
         </Suspense>

@@ -1,7 +1,7 @@
 from datetime import date
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Date, ForeignKey, String, Text
+from sqlalchemy import Date, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
@@ -34,6 +34,9 @@ class Seeker(Base, TimestampMixin):
     degree: Mapped[str] = mapped_column(String(20), default="")
     school: Mapped[str] = mapped_column(String(100), default="")
     skills: Mapped[str] = mapped_column(Text, default="")
+    job_intention: Mapped[str] = mapped_column(String(100), default="")
+    expected_salary_min: Mapped[int] = mapped_column(Integer, default=0)
+    expected_salary_max: Mapped[int] = mapped_column(Integer, default=0)
 
     user: Mapped["User"] = relationship(back_populates="seeker")
     applications: Mapped[List["Application"]] = relationship(

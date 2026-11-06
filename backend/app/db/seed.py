@@ -130,6 +130,9 @@ def ensure_demo(db: Session) -> None:
         degree="工学学士",
         school="南京邮电大学",
         skills="Python、FastAPI、MySQL、Redis、Docker",
+        job_intention="后端开发工程师",
+        expected_salary_min=15000,
+        expected_salary_max=25000,
     )
     db.add(seeker)
     db.flush()
@@ -147,6 +150,9 @@ def ensure_demo(db: Session) -> None:
         degree="理学学士",
         school="深圳大学",
         skills="SQL、Python、Tableau、统计分析",
+        job_intention="数据分析师",
+        expected_salary_min=12000,
+        expected_salary_max=18000,
     )
     db.add(seeker2)
     db.flush()

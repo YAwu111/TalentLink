@@ -36,6 +36,31 @@ const VerificationReviewPage = lazy(() =>
     default: module.VerificationReviewPage,
   })),
 )
+const SeekerProfilePage = lazy(() =>
+  import('@/pages/seeker/SeekerProfilePage').then((module) => ({
+    default: module.SeekerProfilePage,
+  })),
+)
+const SeekerResumePage = lazy(() =>
+  import('@/pages/seeker/SeekerResumePage').then((module) => ({
+    default: module.SeekerResumePage,
+  })),
+)
+const SeekerJobsPage = lazy(() =>
+  import('@/pages/seeker/SeekerJobsPage').then((module) => ({
+    default: module.SeekerJobsPage,
+  })),
+)
+const SeekerJobDetailPage = lazy(() =>
+  import('@/pages/seeker/SeekerJobDetailPage').then((module) => ({
+    default: module.SeekerJobDetailPage,
+  })),
+)
+const SeekerApplicationsPage = lazy(() =>
+  import('@/pages/seeker/SeekerApplicationsPage').then((module) => ({
+    default: module.SeekerApplicationsPage,
+  })),
+)
 
 function ProtectedLayout() {
   const user = useAuthStore((state) => state.user)
@@ -108,6 +133,46 @@ export const router = createBrowserRouter([
             element: (
               <RoleGate role="admin">
                 <VerificationReviewPage />
+              </RoleGate>
+            ),
+          },
+          {
+            path: 'seeker/profile',
+            element: (
+              <RoleGate role="seeker">
+                <SeekerProfilePage />
+              </RoleGate>
+            ),
+          },
+          {
+            path: 'seeker/resume',
+            element: (
+              <RoleGate role="seeker">
+                <SeekerResumePage />
+              </RoleGate>
+            ),
+          },
+          {
+            path: 'seeker/jobs',
+            element: (
+              <RoleGate role="seeker">
+                <SeekerJobsPage />
+              </RoleGate>
+            ),
+          },
+          {
+            path: 'seeker/jobs/:id',
+            element: (
+              <RoleGate role="seeker">
+                <SeekerJobDetailPage />
+              </RoleGate>
+            ),
+          },
+          {
+            path: 'seeker/applications',
+            element: (
+              <RoleGate role="seeker">
+                <SeekerApplicationsPage />
               </RoleGate>
             ),
           },

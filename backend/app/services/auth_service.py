@@ -69,6 +69,9 @@ def serialize_user(user: User) -> dict:
             "degree": item.degree,
             "school": item.school,
             "skills": item.skills,
+            "job_intention": item.job_intention,
+            "expected_salary_min": item.expected_salary_min,
+            "expected_salary_max": item.expected_salary_max,
         }
     elif user.role == Role.employer and user.company is not None:
         item_company: Company = user.company

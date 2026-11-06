@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { ROLE_META } from '@/lib/role'
 import { useAuthStore } from '@/stores/auth'
+import { SeekerDashboard } from '@/pages/seeker/SeekerDashboard'
 
 const PROFILE_LABELS: Record<string, string> = {
   id: '编号',
@@ -44,6 +45,7 @@ export function HomePage() {
 
   const user = useAuthStore((state) => state.user)
   if (!user) return null
+  if (user.role === 'seeker') return <SeekerDashboard />
 
   const role = ROLE_META[user.role]
   const profileEntries = Object.entries(user.profile ?? {}).filter(
