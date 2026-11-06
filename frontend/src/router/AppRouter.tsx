@@ -31,6 +31,11 @@ const CompanyUploadPage = lazy(() =>
     default: module.CompanyUploadPage,
   })),
 )
+const EmployerJobsPage = lazy(() =>
+  import('@/pages/employer/EmployerJobsPage').then((module) => ({
+    default: module.EmployerJobsPage,
+  })),
+)
 const VerificationReviewPage = lazy(() =>
   import('@/pages/admin/VerificationReviewPage').then((module) => ({
     default: module.VerificationReviewPage,
@@ -125,6 +130,14 @@ export const router = createBrowserRouter([
             element: (
               <RoleGate role="employer">
                 <CompanyUploadPage />
+              </RoleGate>
+            ),
+          },
+          {
+            path: 'employer/jobs',
+            element: (
+              <RoleGate role="employer">
+                <EmployerJobsPage />
               </RoleGate>
             ),
           },

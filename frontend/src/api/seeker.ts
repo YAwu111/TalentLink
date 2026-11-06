@@ -17,6 +17,11 @@ export interface SeekerProfile {
   job_intention: string
   expected_salary_min: number
   expected_salary_max: number
+  work_company: string
+  work_title: string
+  work_start: string
+  work_end: string
+  work_description: string
   completeness: number
   is_complete: boolean
   missing_fields: string[]
@@ -39,6 +44,11 @@ export interface SeekerPatch {
   job_intention?: string
   expected_salary_min?: number
   expected_salary_max?: number
+  work_company?: string
+  work_title?: string
+  work_start?: string
+  work_end?: string
+  work_description?: string
 }
 
 export interface SeekerRecognitionField {

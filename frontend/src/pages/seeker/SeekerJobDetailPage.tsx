@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
+  LoaderCircle,
   MapPin,
   Users,
 } from 'lucide-react'
 
+import { cityOf, formatSalaryRange, seekerJobsApi, type Job } from '@/api/jobs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,31 +19,51 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PageLoading } from '@/components/ui/page-loading'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useSeekerProfile } from '@/hooks/useSeekerProfile'
-import {
-  formatSalaryRange,
-  getMockJob,
-} from '@/lib/mock-seeker'
 import { seekerMissingLabels } from '@/lib/seeker'
 import { formatDateTime } from '@/lib/format'
-import { useMockApplications } from '@/stores/mockApplications'
+import { errorText } from '@/lib/error'
 
 export function SeekerJobDetailPage() {
   const { id } = useParams()
-  const job = getMockJob(Number(id))
+  const jobId = Number(id)
+  const { profile, loading: profileLoading } = useSeekerProfile()
+  const [job, setJob] = useState<Job | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [applying, setApplying] = useState(false)
+  const [notice, setNotice] = useState('')
+
   usePageTitle(job?.title ?? '岗位详情')
 
-  const { profile, loading, error } = useSeekerProfile()
-  const applications = useMockApplications((state) => state.applications)
-  const apply = useMockApplications((state) => state.apply)
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [notice, setNotice] = useState('')
+  useEffect(() => {
+    let alive = true
+    setLoading(true)
+    setError('')
+    seekerJobsApi
+      .detail(jobId)
+      .then((data) => {
+        if (alive) setJob(data)
+      })
+      .catch((err) => {
+        if (alive) setError(errorText(err, '岗位加载失败'))
+      })
+      .finally(() => {
+        if (alive) setLoading(false)
+      })
+    return () => {
+      alive = false
+    }
+  }, [jobId])
+
+  if (loading || profileLoading) return <PageLoading label="正在加载岗位详情…" />
 
   if (!job) {
     return (
       <Card className="gap-0 rounded-2xl py-0">
         <CardContent className="grid min-h-[260px] place-items-center text-center">
           <div>
-            <p className="text-sm font-semibold">岗位不存在</p>
+            <p className="text-sm font-semibold">{error || '岗位不存在或已关闭'}</p>
             <Button variant="outline" size="sm" className="mt-3" asChild>
               <Link to="/seeker/jobs">返回岗位列表</Link>
             </Button>
@@ -51,17 +73,24 @@ export function SeekerJobDetailPage() {
     )
   }
 
-  if (loading) return <PageLoading label="正在加载岗位详情…" />
-
-  const applied = applications.some((item) => item.jobId === job.id)
   const canApply = Boolean(profile?.can_apply)
   const missing = seekerMissingLabels(profile?.missing_fields ?? [])
 
-  function handleApply() {
-    if (!job || !canApply || applied) return
-    const ok = apply(job)
-    setConfirmOpen(false)
-    if (ok) setNotice('投递成功（演示数据，仅保存在当前页面内存）。')
+  async function handleApply() {
+    if (!job || !canApply || job.applied || applying) return
+    setApplying(true)
+    setError('')
+    try {
+      await seekerJobsApi.apply(job.id)
+      setJob({ ...job, applied: true })
+      setConfirmOpen(false)
+      setNotice('投递成功，已写入我的投递。')
+    } catch (err) {
+      setConfirmOpen(false)
+      setError(errorText(err, '投递失败，请重试'))
+    } finally {
+      setApplying(false)
+    }
   }
 
   return (
@@ -79,16 +108,16 @@ export function SeekerJobDetailPage() {
               <h1 className="text-2xl font-semibold tracking-tight md:text-[30px]">
                 {job.title}
               </h1>
-              <Badge variant="neutral">演示岗位</Badge>
+              <Badge variant="success">真实岗位</Badge>
             </div>
             <p className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Building2 className="size-3.5" />
-                {job.companyName}
+                {job.company.name}
               </span>
               <span className="flex items-center gap-1.5">
                 <MapPin className="size-3.5" />
-                {job.city}
+                {cityOf(job.company.address)}
               </span>
               <span className="flex items-center gap-1.5">
                 <Users className="size-3.5" />
@@ -97,7 +126,7 @@ export function SeekerJobDetailPage() {
             </p>
           </div>
           <span className="text-lg font-semibold text-primary">
-            {formatSalaryRange(job.salaryMin, job.salaryMax)}
+            {formatSalaryRange(job.salary_min, job.salary_max)}
           </span>
         </div>
       </header>
@@ -127,12 +156,12 @@ export function SeekerJobDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4 px-5 py-5 text-sm leading-relaxed">
               <p className="whitespace-pre-wrap text-foreground/85">
-                {job.requirement}
+                {job.requirement || '岗位要求待补充'}
               </p>
               <div className="border-t border-dashed border-border/70 pt-4">
                 <p className="text-xs font-medium text-muted-foreground">其他要求</p>
                 <p className="mt-1.5 text-foreground/85">
-                  {job.otherRequirement}
+                  {job.other_requirement || '无'}
                 </p>
               </div>
             </CardContent>
@@ -145,15 +174,15 @@ export function SeekerJobDetailPage() {
             <CardContent className="space-y-2 px-5 py-5 text-sm text-muted-foreground">
               <p className="flex items-center gap-2">
                 <BriefcaseBusiness className="size-4" />
-                {job.companyName} · {job.industry}
+                {job.company.name} · {job.company.industry}
               </p>
               <p className="flex items-center gap-2">
                 <MapPin className="size-4" />
-                {job.city}
+                {job.company.address}
               </p>
               <p className="flex items-center gap-2">
                 <CalendarDays className="size-4" />
-                发布于 {formatDateTime(job.publishedAt)}
+                发布于 {job.published_at ? formatDateTime(job.published_at) : '—'}
               </p>
             </CardContent>
           </Card>
@@ -163,11 +192,10 @@ export function SeekerJobDetailPage() {
           <Card className="gap-0 rounded-2xl border-border/70 py-0 shadow-sm ring-0">
             <CardContent className="space-y-3 px-5 py-5">
               <div className="flex flex-wrap gap-1.5">
-                {job.tags.map((tag) => (
-                  <Badge key={tag} variant="neutral">
-                    {tag}
-                  </Badge>
-                ))}
+                <Badge variant="neutral">{job.company.industry}</Badge>
+                <Badge variant={job.company.verified ? 'success' : 'neutral'}>
+                  {job.company.verified ? '已认证企业' : '未认证企业'}
+                </Badge>
               </div>
               {!canApply ? (
                 <Alert className="border-amber-200/80 bg-amber-50 text-amber-900">
@@ -182,13 +210,14 @@ export function SeekerJobDetailPage() {
               <Button
                 className="w-full"
                 size="lg"
-                disabled={applied || !canApply}
+                disabled={job.applied || !canApply || applying}
                 onClick={() => setConfirmOpen(true)}
               >
-                {applied ? '已投递' : canApply ? '投递简历' : '资料未完整'}
+                {applying ? <LoaderCircle className="animate-spin" /> : null}
+                {job.applied ? '已投递' : canApply ? '投递简历' : '资料未完整'}
               </Button>
               <p className="text-[11px] leading-relaxed text-muted-foreground">
-                当前为演示投递，不会写入后端；刷新页面后恢复初始数据。
+                投递会写入后端；同一岗位不可重复投递。
               </p>
             </CardContent>
           </Card>
@@ -198,9 +227,10 @@ export function SeekerJobDetailPage() {
       <ConfirmDialog
         open={confirmOpen}
         title="确认投递"
-        message={`确认向「${job.companyName}」投递「${job.title}」吗？本次为演示投递。`}
+        message={`确认向「${job.company.name}」投递「${job.title}」吗？`}
         confirmText="确认投递"
-        onConfirm={handleApply}
+        loading={applying}
+        onConfirm={() => void handleApply()}
         onClose={() => setConfirmOpen(false)}
       />
     </>

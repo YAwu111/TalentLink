@@ -110,9 +110,45 @@ def ensure_demo(db: Session) -> None:
         salary_min=12000,
         salary_max=18000,
         headcount=1,
-        status=JobStatus.draft,
+        status=JobStatus.published,
+        published_at=datetime.now() - timedelta(days=5),
     )
-    db.add_all([job_backend, job_frontend, job_data])
+    job_product = Job(
+        company_id=company.id,
+        title="产品经理",
+        requirement="负责 B 端产品需求调研、方案设计与版本推进，能够与设计、研发、销售协同。",
+        other_requirement="有 HR SaaS 产品经验者优先。",
+        salary_min=18000,
+        salary_max=30000,
+        headcount=1,
+        status=JobStatus.published,
+        published_at=datetime.now() - timedelta(days=2),
+    )
+    job_java = Job(
+        company_id=company2.id,
+        title="Java 开发工程师",
+        requirement="熟悉 Java、Spring Boot 与 MySQL，了解消息队列与分布式事务。",
+        other_requirement="有金融行业系统经验者优先。",
+        salary_min=16000,
+        salary_max=28000,
+        headcount=2,
+        status=JobStatus.published,
+        published_at=datetime.now() - timedelta(days=7),
+    )
+    job_ops = Job(
+        company_id=company.id,
+        title="运营专员",
+        requirement="负责用户增长活动策划、社群运营与数据复盘，具备内容策划能力。",
+        other_requirement="本科及以上学历，1 年以上运营经验。",
+        salary_min=8000,
+        salary_max=12000,
+        headcount=2,
+        status=JobStatus.published,
+        published_at=datetime.now() - timedelta(days=9),
+    )
+    db.add_all(
+        [job_backend, job_frontend, job_data, job_product, job_java, job_ops]
+    )
     db.flush()
 
     # 求职者
@@ -133,6 +169,11 @@ def ensure_demo(db: Session) -> None:
         job_intention="后端开发工程师",
         expected_salary_min=15000,
         expected_salary_max=25000,
+        work_company="南京云杉软件有限公司",
+        work_title="后端开发工程师",
+        work_start="2021.07",
+        work_end="至今",
+        work_description="负责企业服务平台后端接口与数据同步，使用 FastAPI、MySQL、Redis 支撑核心业务。",
     )
     db.add(seeker)
     db.flush()
@@ -153,6 +194,11 @@ def ensure_demo(db: Session) -> None:
         job_intention="数据分析师",
         expected_salary_min=12000,
         expected_salary_max=18000,
+        work_company="深圳数澜科技有限公司",
+        work_title="数据分析师",
+        work_start="2022.07",
+        work_end="至今",
+        work_description="负责零售客户经营分析、指标体系建设与可视化报表。",
     )
     db.add(seeker2)
     db.flush()
@@ -169,6 +215,23 @@ def ensure_demo(db: Session) -> None:
                 job_id=job_frontend.id,
                 seeker_id=seeker.id,
                 status=ApplicationStatus.submitted,
+            ),
+            Application(
+                job_id=job_data.id,
+                seeker_id=seeker.id,
+                status=ApplicationStatus.interview,
+                note="面试安排在周五下午。",
+            ),
+            Application(
+                job_id=job_java.id,
+                seeker_id=seeker.id,
+                status=ApplicationStatus.rejected,
+            ),
+            Application(
+                job_id=job_ops.id,
+                seeker_id=seeker.id,
+                status=ApplicationStatus.offered,
+                note="已收到录用意向。",
             ),
             Application(
                 job_id=job_data.id,

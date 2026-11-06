@@ -1,12 +1,20 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight,
   BriefcaseBusiness,
   FileText,
+  LoaderCircle,
   Send,
   UserRound,
 } from 'lucide-react'
 
+import {
+  APPLICATION_STATUS_META,
+  seekerJobsApi,
+  type Application,
+  type Job,
+} from '@/api/jobs'
 import { SeekerCompletenessCard } from '@/components/seeker/SeekerCompletenessCard'
 import { SeekerPreviewCard } from '@/components/seeker/SeekerPreviewCard'
 import { JobCard } from '@/components/seeker/JobCard'
@@ -18,15 +26,37 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageLoading } from '@/components/ui/page-loading'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useSeekerProfile } from '@/hooks/useSeekerProfile'
-import { APPLICATION_STATUS_META, MOCK_JOBS } from '@/lib/mock-seeker'
+import { errorText } from '@/lib/error'
 import { toSeekerForm } from '@/lib/seeker'
-import { useMockApplications } from '@/stores/mockApplications'
 
 export function SeekerDashboard() {
   usePageTitle('求职者工作台')
   const { profile, loading, error, reload } = useSeekerProfile()
-  const applications = useMockApplications((state) => state.applications)
-  const hasApplied = useMockApplications((state) => state.hasApplied)
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [applications, setApplications] = useState<Application[]>([])
+  const [dataLoading, setDataLoading] = useState(true)
+  const [dataError, setDataError] = useState('')
+
+  useEffect(() => {
+    let alive = true
+    setDataLoading(true)
+    setDataError('')
+    Promise.all([seekerJobsApi.list(), seekerJobsApi.applications()])
+      .then(([jobData, applicationData]) => {
+        if (!alive) return
+        setJobs(jobData)
+        setApplications(applicationData)
+      })
+      .catch((err) => {
+        if (alive) setDataError(errorText(err, '岗位与投递加载失败'))
+      })
+      .finally(() => {
+        if (alive) setDataLoading(false)
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
 
   if (loading) return <PageLoading label="正在加载求职者工作台…" />
   if (error || !profile) {
@@ -50,8 +80,8 @@ export function SeekerDashboard() {
     isComplete: profile.is_complete,
   }
   const latest = applications.slice(0, 2)
-  const recommended = MOCK_JOBS.filter((job) => !hasApplied(job.id)).slice(0, 2)
-  const recommendedJobs = recommended.length > 0 ? recommended : MOCK_JOBS.slice(0, 2)
+  const recommended = jobs.filter((job) => !job.applied).slice(0, 2)
+  const recommendedJobs = recommended.length > 0 ? recommended : jobs.slice(0, 2)
 
   return (
     <div>
@@ -64,7 +94,7 @@ export function SeekerDashboard() {
             <StaggerText text={`你好，${profile.name || '求职者'}`} />
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            完善资料、浏览岗位、跟进投递状态。岗位与投递数据当前为演示数据。
+            完善资料、浏览岗位、跟进投递状态。岗位与投递数据来自后端。
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -94,6 +124,15 @@ export function SeekerDashboard() {
         </Alert>
       ) : null}
 
+      {dataError ? (
+        <Alert
+          variant="destructive"
+          className="mt-5 border-destructive/20 bg-destructive/5"
+        >
+          <AlertDescription>{dataError}</AlertDescription>
+        </Alert>
+      ) : null}
+
       <div className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
         <div className="space-y-5">
           <section>
@@ -107,13 +146,16 @@ export function SeekerDashboard() {
               </Button>
             </div>
             <div className="mt-3 grid gap-3">
-              {recommendedJobs.map((job) => (
-                <JobCard
-                  key={job.id}
-                  job={job}
-                  applied={hasApplied(job.id)}
-                />
-              ))}
+              {dataLoading ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <LoaderCircle className="size-3.5 animate-spin" />
+                  正在加载岗位…
+                </div>
+              ) : recommendedJobs.length > 0 ? (
+                recommendedJobs.map((job) => <JobCard key={job.id} job={job} />)
+              ) : (
+                <p className="text-xs text-muted-foreground">暂无已发布岗位。</p>
+              )}
             </div>
           </section>
 
@@ -140,10 +182,10 @@ export function SeekerDashboard() {
                       className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 px-3 py-2.5 text-xs"
                     >
                       <span className="font-medium">
-                        {application.jobTitle}
+                        {application.job_title}
                       </span>
                       <span className="text-muted-foreground">
-                        {application.companyName}
+                        {application.company_name}
                       </span>
                       <Badge variant={meta.variant}>{meta.label}</Badge>
                     </div>

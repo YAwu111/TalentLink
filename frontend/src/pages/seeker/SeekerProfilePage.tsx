@@ -344,6 +344,71 @@ export function SeekerProfilePage() {
 
               <Card className="gap-0 rounded-2xl border-border/70 py-0 shadow-sm ring-0">
                 <CardHeader className="border-b border-border/60 px-5 py-4">
+                  <CardTitle className="text-[15px] font-semibold">
+                    工作经历
+                    <span className="ml-2 text-xs font-normal text-muted-foreground">
+                      选填
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 px-5 py-5">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="工作单位" htmlFor="seeker-work-company">
+                      <Input
+                        id="seeker-work-company"
+                        value={form.work_company}
+                        maxLength={100}
+                        placeholder="公司名称"
+                        className="h-11"
+                        onChange={(event) => editor.updateField('work_company', event.target.value)}
+                      />
+                    </Field>
+                    <Field label="工作职位" htmlFor="seeker-work-title">
+                      <Input
+                        id="seeker-work-title"
+                        value={form.work_title}
+                        maxLength={100}
+                        placeholder="职位名称"
+                        className="h-11"
+                        onChange={(event) => editor.updateField('work_title', event.target.value)}
+                      />
+                    </Field>
+                    <Field label="开始时间" htmlFor="seeker-work-start">
+                      <Input
+                        id="seeker-work-start"
+                        value={form.work_start}
+                        maxLength={20}
+                        placeholder="如：2021.07"
+                        className="h-11"
+                        onChange={(event) => editor.updateField('work_start', event.target.value)}
+                      />
+                    </Field>
+                    <Field label="结束时间" htmlFor="seeker-work-end">
+                      <Input
+                        id="seeker-work-end"
+                        value={form.work_end}
+                        maxLength={20}
+                        placeholder="如：至今"
+                        className="h-11"
+                        onChange={(event) => editor.updateField('work_end', event.target.value)}
+                      />
+                    </Field>
+                  </div>
+                  <Field label="工作描述" htmlFor="seeker-work-description">
+                    <Textarea
+                      id="seeker-work-description"
+                      value={form.work_description}
+                      maxLength={1000}
+                      rows={4}
+                      placeholder="描述主要职责和成果"
+                      onChange={(event) => editor.updateField('work_description', event.target.value)}
+                    />
+                  </Field>
+                </CardContent>
+              </Card>
+
+              <Card className="gap-0 rounded-2xl border-border/70 py-0 shadow-sm ring-0">
+                <CardHeader className="border-b border-border/60 px-5 py-4">
                   <CardTitle className="text-[15px] font-semibold">求职意向与技能</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 px-5 py-5">

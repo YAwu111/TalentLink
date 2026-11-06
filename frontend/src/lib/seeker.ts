@@ -15,6 +15,11 @@ export const SEEKER_FORM_FIELDS = [
   'job_intention',
   'expected_salary_min',
   'expected_salary_max',
+  'work_company',
+  'work_title',
+  'work_start',
+  'work_end',
+  'work_description',
 ] as const
 
 export type SeekerField = (typeof SEEKER_FORM_FIELDS)[number]
@@ -38,6 +43,11 @@ export const SEEKER_LABELS: Record<SeekerField, string> = {
   job_intention: '求职意向',
   expected_salary_min: '期望薪资下限',
   expected_salary_max: '期望薪资上限',
+  work_company: '工作单位',
+  work_title: '工作职位',
+  work_start: '开始时间',
+  work_end: '结束时间',
+  work_description: '工作描述',
 }
 
 /** 与后端 seeker_service.FIELD_WEIGHTS 保持一致 */
@@ -72,6 +82,11 @@ export const EMPTY_SEEKER_FORM: SeekerFormValues = {
   job_intention: '',
   expected_salary_min: '',
   expected_salary_max: '',
+  work_company: '',
+  work_title: '',
+  work_start: '',
+  work_end: '',
+  work_description: '',
 }
 
 export function toSeekerForm(profile: SeekerProfile): SeekerFormValues {
@@ -92,6 +107,11 @@ export function toSeekerForm(profile: SeekerProfile): SeekerFormValues {
       profile.expected_salary_min > 0 ? String(profile.expected_salary_min) : '',
     expected_salary_max:
       profile.expected_salary_max > 0 ? String(profile.expected_salary_max) : '',
+    work_company: profile.work_company,
+    work_title: profile.work_title,
+    work_start: profile.work_start,
+    work_end: profile.work_end,
+    work_description: profile.work_description,
   }
 }
 

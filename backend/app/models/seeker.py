@@ -37,6 +37,11 @@ class Seeker(Base, TimestampMixin):
     job_intention: Mapped[str] = mapped_column(String(100), default="")
     expected_salary_min: Mapped[int] = mapped_column(Integer, default=0)
     expected_salary_max: Mapped[int] = mapped_column(Integer, default=0)
+    work_company: Mapped[str] = mapped_column(String(100), default="")
+    work_title: Mapped[str] = mapped_column(String(100), default="")
+    work_start: Mapped[str] = mapped_column(String(20), default="")
+    work_end: Mapped[str] = mapped_column(String(20), default="")
+    work_description: Mapped[str] = mapped_column(Text, default="")
 
     user: Mapped["User"] = relationship(back_populates="seeker")
     applications: Mapped[List["Application"]] = relationship(

@@ -58,6 +58,11 @@ LABELS = {
     "skills": ("专业技能", "技能特长", "技能", "能力"),
     "job_intention": ("求职意向", "意向岗位", "目标岗位", "应聘岗位"),
     "expected_salary": ("期望薪资", "期望工资", "薪资要求", "期望月薪"),
+    "work_company": ("工作单位", "任职公司", "公司名称"),
+    "work_title": ("工作职位", "职位", "岗位"),
+    "work_start": ("开始时间", "入职时间"),
+    "work_end": ("结束时间", "离职时间"),
+    "work_description": ("工作描述", "工作内容", "职责描述", "主要职责"),
 }
 
 PHONE_RE = re.compile(r"(?<!\d)(1[3-9]\d{9}|0\d{2,3}[-\s]?\d{7,8})(?!\d)")
@@ -145,7 +150,22 @@ def extract_seeker_fields(document: ExtractedDocument) -> dict[str, FieldCandida
     if not lines:
         return fields
 
-    for key in ("name", "gender", "household", "education", "major", "degree", "school", "skills", "job_intention"):
+    for key in (
+        "name",
+        "gender",
+        "household",
+        "education",
+        "major",
+        "degree",
+        "school",
+        "skills",
+        "job_intention",
+        "work_company",
+        "work_title",
+        "work_start",
+        "work_end",
+        "work_description",
+    ):
         found = _find_label(lines, LABELS[key])
         if found:
             value, source, confidence = found
@@ -264,7 +284,7 @@ def build_seeker_result(
 
     overall = round(
         sum(
-            FIELD_WEIGHTS[key] * value["confidence"]
+            FIELD_WEIGHTS.get(key, 0) * value["confidence"]
             for key, value in output.items()
         )
         / 100,

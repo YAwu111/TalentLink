@@ -59,6 +59,32 @@ export function ResumeDocument({ profile }: { profile: SeekerProfile }) {
         </div>
       </section>
 
+      {profile.work_company || profile.work_title || profile.work_description ? (
+        <section className="mt-6">
+          <h2 className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
+            工作经历
+          </h2>
+          <div className="mt-2 border-b border-slate-200 pb-2">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="text-sm font-semibold">
+                {profile.work_company || '工作单位'}
+                {profile.work_title ? ` · ${profile.work_title}` : ''}
+              </span>
+              <span className="text-xs text-slate-500">
+                {[profile.work_start, profile.work_end]
+                  .filter(Boolean)
+                  .join(' – ') || '时间待完善'}
+              </span>
+            </div>
+            {profile.work_description ? (
+              <p className="mt-1.5 whitespace-pre-wrap text-xs leading-relaxed text-slate-600">
+                {profile.work_description}
+              </p>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
       <section className="mt-6">
         <h2 className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
           专业技能

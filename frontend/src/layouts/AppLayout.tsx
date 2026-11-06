@@ -22,6 +22,7 @@ const BASE_NAV: NavItem[] = [{ to: '/', label: '工作台', end: true }]
 const EMPLOYER_NAV: NavItem[] = [
   { to: '/employer/profile', label: '企业资料', end: true },
   { to: '/employer/profile/upload', label: '资料上传', end: true },
+  { to: '/employer/jobs', label: '岗位管理', end: true },
 ]
 
 const ADMIN_NAV: NavItem[] = [

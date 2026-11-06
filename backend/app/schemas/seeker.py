@@ -20,6 +20,11 @@ class SeekerProfile(BaseModel):
     job_intention: str
     expected_salary_min: int
     expected_salary_max: int
+    work_company: str
+    work_title: str
+    work_start: str
+    work_end: str
+    work_description: str
 
     completeness: int
     is_complete: bool
@@ -43,3 +48,8 @@ class SeekerPatch(BaseModel):
     job_intention: str | None = Field(default=None, max_length=100)
     expected_salary_min: int | None = Field(default=None, ge=0, le=1_000_000)
     expected_salary_max: int | None = Field(default=None, ge=0, le=1_000_000)
+    work_company: str | None = Field(default=None, max_length=100)
+    work_title: str | None = Field(default=None, max_length=100)
+    work_start: str | None = Field(default=None, max_length=20)
+    work_end: str | None = Field(default=None, max_length=20)
+    work_description: str | None = Field(default=None, max_length=1000)

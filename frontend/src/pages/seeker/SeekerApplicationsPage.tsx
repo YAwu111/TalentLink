@@ -1,20 +1,23 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Send } from 'lucide-react'
+import { LoaderCircle, Send } from 'lucide-react'
 
+import {
+  APPLICATION_STATUS_META,
+  seekerJobsApi,
+  type Application,
+  type ApplicationStatus,
+} from '@/api/jobs'
 import { ApplicationCard } from '@/components/seeker/ApplicationCard'
 import { StaggerText } from '@/components/company/StaggerText'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import {
-  APPLICATION_STATUS_META,
-  type MockApplicationStatus,
-} from '@/lib/mock-seeker'
-import { useMockApplications } from '@/stores/mockApplications'
+import { errorText } from '@/lib/error'
 
-type Filter = 'all' | MockApplicationStatus
+type Filter = 'all' | ApplicationStatus
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: 'all', label: '全部' },
@@ -27,8 +30,30 @@ const FILTERS: { value: Filter; label: string }[] = [
 
 export function SeekerApplicationsPage() {
   usePageTitle('我的投递')
-  const applications = useMockApplications((state) => state.applications)
+  const [applications, setApplications] = useState<Application[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
+
+  useEffect(() => {
+    let alive = true
+    setLoading(true)
+    setError('')
+    seekerJobsApi
+      .applications()
+      .then((data) => {
+        if (alive) setApplications(data)
+      })
+      .catch((err) => {
+        if (alive) setError(errorText(err, '投递记录加载失败'))
+      })
+      .finally(() => {
+        if (alive) setLoading(false)
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
 
   const filtered = useMemo(
     () =>
@@ -49,11 +74,11 @@ export function SeekerApplicationsPage() {
             <StaggerText text="我的投递" />
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            跟进投递状态。当前为演示数据，刷新页面后恢复初始记录。
+            投递记录来自后端，重复投递会被拦截。
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="neutral">演示数据</Badge>
+          <Badge variant="success">真实投递</Badge>
           <Button size="sm" asChild>
             <Link to="/seeker/jobs">
               <Send />
@@ -81,13 +106,29 @@ export function SeekerApplicationsPage() {
         ))}
       </div>
 
-      <div className="mt-4 grid gap-3">
-        {filtered.map((application) => (
-          <ApplicationCard key={application.id} application={application} />
-        ))}
-      </div>
+      {error ? (
+        <Alert
+          variant="destructive"
+          className="mt-5 border-destructive/20 bg-destructive/5"
+        >
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="mt-8 grid min-h-[220px] place-items-center">
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <LoaderCircle className="size-4 animate-spin" />
+            正在加载投递记录…
+          </p>
+        </div>
+      ) : filtered.length > 0 ? (
+        <div className="mt-4 grid gap-3">
+          {filtered.map((application) => (
+            <ApplicationCard key={application.id} application={application} />
+          ))}
+        </div>
+      ) : (
         <Card className="mt-4 gap-0 rounded-2xl border-dashed border-border/80 py-0 shadow-none ring-0">
           <CardContent className="grid min-h-[240px] place-items-center text-center">
             <div>
@@ -102,7 +143,7 @@ export function SeekerApplicationsPage() {
             </div>
           </CardContent>
         </Card>
-      ) : null}
+      )}
 
       <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
         状态说明：

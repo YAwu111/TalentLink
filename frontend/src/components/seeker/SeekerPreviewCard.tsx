@@ -94,6 +94,24 @@ export function SeekerPreviewCard({ values }: SeekerPreviewCardProps) {
         </p>
       </div>
 
+      {values.work_company.trim() || values.work_title.trim() ? (
+        <div className="mt-4 border-t border-dashed border-border/70 pt-4">
+          <p className="text-xs text-muted-foreground">工作经历</p>
+          <p className="mt-1.5 text-[13px] font-medium">
+            {values.work_company.trim() || '工作单位待完善'}
+            {values.work_title.trim() ? ` · ${values.work_title.trim()}` : ''}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {[values.work_start, values.work_end].filter(Boolean).join(' – ') || '时间待完善'}
+          </p>
+          {values.work_description.trim() ? (
+            <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+              {values.work_description}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className="mt-4 border-t border-dashed border-border/70 pt-4">
         <p className="text-xs text-muted-foreground">技能</p>
         <div className="mt-2 flex flex-wrap gap-1.5">

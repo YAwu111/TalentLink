@@ -1,25 +1,26 @@
-import { useMemo, useState } from 'react'
-import { BriefcaseBusiness, Search, SlidersHorizontal } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { BriefcaseBusiness, LoaderCircle, Search, SlidersHorizontal } from 'lucide-react'
 
+import { seekerJobsApi, type Job } from '@/api/jobs'
 import { JobCard } from '@/components/seeker/JobCard'
 import { StaggerText } from '@/components/company/StaggerText'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { MOCK_JOBS } from '@/lib/mock-seeker'
-import { useMockApplications } from '@/stores/mockApplications'
+import { errorText } from '@/lib/error'
 import { cn } from '@/lib/utils'
 
-const CITIES = ['全部城市', '上海', '深圳', '杭州', '北京', '南京']
-const INDUSTRIES = ['全部行业', '互联网 / 软件', '大数据', '金融', '教育']
+const CITIES = ['全部城市', '上海', '深圳']
+const INDUSTRIES = ['全部行业', '互联网 / 软件', '大数据']
 const SALARY_RANGES = [
-  { label: '全部薪资', min: 0, max: 0 },
+  { label: '全部薪资', min: undefined, max: undefined },
   { label: '8K–15K', min: 8000, max: 15000 },
   { label: '15K–25K', min: 15000, max: 25000 },
-  { label: '25K 以上', min: 25000, max: 0 },
-]
+  { label: '25K 以上', min: 25000, max: undefined },
+] as const
 
 export function SeekerJobsPage() {
   usePageTitle('岗位浏览')
@@ -27,26 +28,35 @@ export function SeekerJobsPage() {
   const [city, setCity] = useState('全部城市')
   const [industry, setIndustry] = useState('全部行业')
   const [salaryIndex, setSalaryIndex] = useState(0)
-  const hasApplied = useMockApplications((state) => state.hasApplied)
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  const jobs = useMemo(() => {
-    const range = SALARY_RANGES[salaryIndex]
-    return MOCK_JOBS.filter((job) => {
-      const matchKeyword =
-        !keyword.trim() ||
-        `${job.title}${job.companyName}${job.tags.join('')}`
-          .toLowerCase()
-          .includes(keyword.trim().toLowerCase())
-      const matchCity = city === '全部城市' || job.city === city
-      const matchIndustry =
-        industry === '全部行业' || job.industry === industry
-      const matchSalary =
-        range.min === 0 ||
-        (range.max > 0
-          ? job.salaryMax >= range.min && job.salaryMin <= range.max
-          : job.salaryMax >= range.min)
-      return matchKeyword && matchCity && matchIndustry && matchSalary
-    })
+  useEffect(() => {
+    let alive = true
+    const timer = window.setTimeout(async () => {
+      setLoading(true)
+      setError('')
+      try {
+        const range = SALARY_RANGES[salaryIndex]
+        const data = await seekerJobsApi.list({
+          keyword: keyword.trim() || undefined,
+          city: city === '全部城市' ? undefined : city,
+          industry: industry === '全部行业' ? undefined : industry,
+          salary_min: range.min,
+          salary_max: range.max,
+        })
+        if (alive) setJobs(data)
+      } catch (err) {
+        if (alive) setError(errorText(err, '岗位加载失败'))
+      } finally {
+        if (alive) setLoading(false)
+      }
+    }, 250)
+    return () => {
+      alive = false
+      window.clearTimeout(timer)
+    }
   }, [keyword, city, industry, salaryIndex])
 
   function resetFilters() {
@@ -55,6 +65,12 @@ export function SeekerJobsPage() {
     setIndustry('全部行业')
     setSalaryIndex(0)
   }
+
+  const hasFilters =
+    keyword ||
+    city !== '全部城市' ||
+    industry !== '全部行业' ||
+    salaryIndex !== 0
 
   return (
     <>
@@ -67,10 +83,10 @@ export function SeekerJobsPage() {
             <StaggerText text="岗位浏览" />
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            搜索并筛选岗位。当前岗位数据为演示数据，投递记录仅保存在本次页面会话。
+            浏览企业已发布岗位，投递会写入后端并出现在「我的投递」中。
           </p>
         </div>
-        <Badge variant="neutral">演示数据</Badge>
+        <Badge variant="success">真实岗位</Badge>
       </header>
 
       <Card className="mt-5 gap-0 rounded-2xl border-border/70 py-0 shadow-sm ring-0">
@@ -120,7 +136,7 @@ export function SeekerJobsPage() {
             <Button
               variant="ghost"
               size="sm"
-              className={cn(keyword || city !== '全部城市' || industry !== '全部行业' || salaryIndex !== 0 ? '' : 'hidden')}
+              className={cn(!hasFilters && 'hidden')}
               onClick={resetFilters}
             >
               重置
@@ -133,17 +149,29 @@ export function SeekerJobsPage() {
         </CardContent>
       </Card>
 
-      <div className="mt-5 grid gap-3">
-        {jobs.map((job) => (
-          <JobCard
-            key={job.id}
-            job={job}
-            applied={hasApplied(job.id)}
-          />
-        ))}
-      </div>
+      {error ? (
+        <Alert
+          variant="destructive"
+          className="mt-5 border-destructive/20 bg-destructive/5"
+        >
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
 
-      {jobs.length === 0 ? (
+      {loading ? (
+        <div className="mt-8 grid min-h-[220px] place-items-center">
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <LoaderCircle className="size-4 animate-spin" />
+            正在加载岗位…
+          </p>
+        </div>
+      ) : jobs.length > 0 ? (
+        <div className="mt-5 grid gap-3">
+          {jobs.map((job) => (
+            <JobCard key={job.id} job={job} />
+          ))}
+        </div>
+      ) : (
         <Card className="mt-5 gap-0 rounded-2xl border-dashed border-border/80 py-0 shadow-none ring-0">
           <CardContent className="grid min-h-[240px] place-items-center text-center">
             <div>
@@ -158,7 +186,7 @@ export function SeekerJobsPage() {
             </div>
           </CardContent>
         </Card>
-      ) : null}
+      )}
     </>
   )
 }
