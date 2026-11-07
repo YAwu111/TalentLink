@@ -36,6 +36,7 @@ const STATUS_FILTERS: { value: 'all' | ApplicationStatus; label: string }[] = [
   { value: 'offered', label: '已发录用' },
   { value: 'offer_accepted', label: '已接受录用' },
   { value: 'offer_declined', label: '已拒绝录用' },
+  { value: 'offer_revoked', label: '录用已撤回' },
   { value: 'rejected', label: '未通过' },
 ]
 
@@ -172,7 +173,10 @@ export function EmployerApplicationsPage() {
       ) : applications.length > 0 ? (
         <div className="mt-5 grid gap-3">
           {applications.map((application) => {
-            const meta = APPLICATION_STATUS_META[application.status]
+            const meta = APPLICATION_STATUS_META[application.status] ?? {
+              label: application.status,
+              variant: 'neutral' as const,
+            }
             return (
               <article
                 key={application.id}

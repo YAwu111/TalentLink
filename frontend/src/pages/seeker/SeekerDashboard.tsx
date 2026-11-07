@@ -175,7 +175,10 @@ export function SeekerDashboard() {
             <CardContent className="px-5 py-4">
               <div className="space-y-2.5">
                 {latest.map((application) => {
-                  const meta = APPLICATION_STATUS_META[application.status]
+                  const meta = APPLICATION_STATUS_META[application.status] ?? {
+                    label: application.status,
+                    variant: 'neutral' as const,
+                  }
                   return (
                     <div
                       key={application.id}

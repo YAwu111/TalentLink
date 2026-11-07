@@ -58,6 +58,10 @@ export function SeekerOffersPage() {
   )
   const pendingOffers = offers.filter((offer) => offer.status === 'sent')
   const history = offers.filter((offer) => offer.status !== 'sent')
+  const revokedAccepted = offers.some(
+    (offer) =>
+      offer.status === 'revoked' && offer.application_status === 'offer_revoked',
+  )
 
   async function confirmAction() {
     if (!pending || actionLoading) return
@@ -115,6 +119,12 @@ export function SeekerOffersPage() {
             其他企业的待回应通知已自动失效。
           </AlertDescription>
         </Alert>
+      ) : revokedAccepted ? (
+        <Alert className="mt-5 border-amber-200/80 bg-amber-50 text-amber-900">
+          <AlertDescription className="text-amber-900/90">
+            有企业撤回了你已接受的录用通知，录取标记已清除；此前自动拒绝的其他 Offer 不会重新打开。
+          </AlertDescription>
+        </Alert>
       ) : pendingOffers.length > 1 ? (
         <Alert className="mt-5 border-amber-200/80 bg-amber-50 text-amber-900">
           <AlertDescription className="text-amber-900/90">
@@ -162,7 +172,10 @@ export function SeekerOffersPage() {
               <h2 className="text-sm font-semibold">待回应</h2>
               <div className="mt-3 grid gap-3">
                 {pendingOffers.map((offer) => {
-                  const meta = OFFER_STATUS_META[offer.status]
+                  const meta = OFFER_STATUS_META[offer.status] ?? {
+                    label: offer.status,
+                    variant: 'neutral' as const,
+                  }
                   return (
                     <article
                       key={offer.id}
@@ -238,7 +251,10 @@ export function SeekerOffersPage() {
               <h2 className="text-sm font-semibold">已处理</h2>
               <div className="mt-3 grid gap-3">
                 {history.map((offer) => {
-                  const meta = OFFER_STATUS_META[offer.status]
+                  const meta = OFFER_STATUS_META[offer.status] ?? {
+                    label: offer.status,
+                    variant: 'neutral' as const,
+                  }
                   return (
                     <article
                       key={offer.id}

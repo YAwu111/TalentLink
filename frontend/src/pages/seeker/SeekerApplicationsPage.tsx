@@ -27,6 +27,7 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: 'offered', label: '已发录用' },
   { value: 'offer_accepted', label: '已接受录用' },
   { value: 'offer_declined', label: '已拒绝录用' },
+  { value: 'offer_revoked', label: '录用已撤回' },
   { value: 'rejected', label: '未通过' },
 ]
 

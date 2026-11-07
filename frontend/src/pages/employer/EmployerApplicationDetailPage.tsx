@@ -194,8 +194,16 @@ export function EmployerApplicationDetailPage() {
   }
 
   const { application, seeker, offer } = detail
-  const meta = APPLICATION_STATUS_META[application.status]
-  const offerMeta = offer ? OFFER_STATUS_META[offer.status] : null
+  const meta = APPLICATION_STATUS_META[application.status] ?? {
+    label: application.status,
+    variant: 'neutral' as const,
+  }
+  const offerMeta = offer
+    ? (OFFER_STATUS_META[offer.status] ?? {
+        label: offer.status,
+        variant: 'neutral' as const,
+      })
+    : null
   const canMarkViewed = application.status === 'submitted'
   const canInterview =
     application.status === 'submitted' || application.status === 'viewed'
@@ -208,9 +216,12 @@ export function EmployerApplicationDetailPage() {
     application.status === 'viewed' ||
     application.status === 'interview'
   const canSendOffer =
-    (activeApplication || application.status === 'offered') &&
+    (activeApplication ||
+      application.status === 'offered' ||
+      application.status === 'offer_revoked') &&
     (!offer || offer.status === 'sent' || offer.status === 'revoked')
-  const canRevokeOffer = offer?.status === 'sent'
+  const canRevokeOffer =
+    offer?.status === 'sent' || offer?.status === 'accepted'
 
   return (
     <>
@@ -359,7 +370,9 @@ export function EmployerApplicationDetailPage() {
                 <p className="border-t border-dashed border-border/70 pt-3 text-xs leading-relaxed text-muted-foreground">
                   {application.status === 'offered'
                     ? '该投递已进入录用阶段，暂不支持在此修改。'
-                    : '该投递已结束，不能继续修改状态。'}
+                    : application.status === 'offer_revoked'
+                      ? '录用通知已被撤回，可在右侧重新发放。'
+                      : '该投递已结束，不能继续修改状态。'}
                 </p>
               )}
             </CardContent>
@@ -436,7 +449,7 @@ export function EmployerApplicationDetailPage() {
                   onClick={() => setRevokeOpen(true)}
                 >
                   <XCircle />
-                  撤回录用通知
+                  {offer?.status === 'accepted' ? '撤回已接受录用' : '撤回录用通知'}
                 </Button>
               ) : null}
             </CardContent>
@@ -460,8 +473,12 @@ export function EmployerApplicationDetailPage() {
 
       <ConfirmDialog
         open={revokeOpen}
-        title="撤回录用通知"
-        message={`确认撤回发给「${seeker.name}」的录用通知吗？撤回后可重新发送。`}
+        title={offer?.status === 'accepted' ? '撤回已接受的录用' : '撤回录用通知'}
+        message={
+          offer?.status === 'accepted'
+            ? `「${seeker.name}」已经接受了该录用通知。撤回后该录取标记会被清除，其他已自动拒绝的 Offer 不会重新打开。确认撤回吗？`
+            : `确认撤回发给「${seeker.name}」的录用通知吗？撤回后可重新发送。`
+        }
         confirmText="确认撤回"
         loading={offerSaving}
         onConfirm={() => void revokeOffer()}

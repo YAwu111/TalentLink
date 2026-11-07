@@ -11,7 +11,10 @@ import {
 import { formatDateTime } from '@/lib/format'
 
 export function ApplicationCard({ application }: { application: Application }) {
-  const meta = APPLICATION_STATUS_META[application.status]
+  const meta = APPLICATION_STATUS_META[application.status] ?? {
+    label: application.status,
+    variant: 'neutral' as const,
+  }
 
   return (
     <article className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
