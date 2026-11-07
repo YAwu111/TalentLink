@@ -33,7 +33,9 @@ const STATUS_FILTERS: { value: 'all' | ApplicationStatus; label: string }[] = [
   { value: 'submitted', label: '已投递' },
   { value: 'viewed', label: '已查看' },
   { value: 'interview', label: '面试中' },
-  { value: 'offered', label: '已录用' },
+  { value: 'offered', label: '已发录用' },
+  { value: 'offer_accepted', label: '已接受录用' },
+  { value: 'offer_declined', label: '已拒绝录用' },
   { value: 'rejected', label: '未通过' },
 ]
 
