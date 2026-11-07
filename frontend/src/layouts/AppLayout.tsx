@@ -34,6 +34,7 @@ const SEEKER_NAV: NavItem[] = [
   { to: '/seeker/profile', label: '个人资料', end: true },
   { to: '/seeker/jobs', label: '岗位', end: true },
   { to: '/seeker/applications', label: '我的投递', end: true },
+  { to: '/seeker/offers', label: '录用通知', end: true },
 ]
 
 export function AppLayout() {

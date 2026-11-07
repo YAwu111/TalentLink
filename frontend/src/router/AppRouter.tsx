@@ -76,6 +76,11 @@ const SeekerApplicationsPage = lazy(() =>
     default: module.SeekerApplicationsPage,
   })),
 )
+const SeekerOffersPage = lazy(() =>
+  import('@/pages/seeker/SeekerOffersPage').then((module) => ({
+    default: module.SeekerOffersPage,
+  })),
+)
 
 function ProtectedLayout() {
   const user = useAuthStore((state) => state.user)
@@ -212,6 +217,14 @@ export const router = createBrowserRouter([
             element: (
               <RoleGate role="seeker">
                 <SeekerApplicationsPage />
+              </RoleGate>
+            ),
+          },
+          {
+            path: 'seeker/offers',
+            element: (
+              <RoleGate role="seeker">
+                <SeekerOffersPage />
               </RoleGate>
             ),
           },
