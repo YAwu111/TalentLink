@@ -133,19 +133,25 @@ def revoke_offer(db: Session, company: Company, application_id: int) -> OfferOut
     offer = application.offer
     if offer is None:
         raise ServiceError(404, "该投递还没有录用通知")
-    if offer.status is not OfferStatus.sent:
-        raise ServiceError(409, "只有待响应的录用通知可以撤回")
+    if offer.status not in {OfferStatus.sent, OfferStatus.accepted}:
+        raise ServiceError(409, "只有待回应或已接受的录用通知可以撤回")
     offer.status = OfferStatus.revoked
     offer.responded_at = _now()
-    # 撤回后回到面试阶段，企业可以修改条件后重新发放
-    application.status = ApplicationStatus.interview
+    if application.status is ApplicationStatus.offer_accepted:
+        application.status = ApplicationStatus.offer_revoked
+        if application.seeker.accepted_offer_id == offer.id:
+            application.seeker.accepted_offer_id = None
+    else:
+        # 撤回待回应 Offer 后回到面试阶段，企业可以修改条件后重新发放
+        application.status = ApplicationStatus.interview
     db.commit()
     db.refresh(offer)
     logger.info(
-        "企业撤回录用 company_id=%s application_id=%s offer_id=%s",
+        "企业撤回录用 company_id=%s application_id=%s offer_id=%s previous_status=%s",
         company.id,
         application.id,
         offer.id,
+        "accepted" if application.status is ApplicationStatus.offer_revoked else "sent",
     )
     return offer_out(offer)
 

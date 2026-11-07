@@ -40,6 +40,7 @@ class ApplicationStatus(str, enum.Enum):
     offered = "offered"
     offer_accepted = "offer_accepted"
     offer_declined = "offer_declined"
+    offer_revoked = "offer_revoked"
     rejected = "rejected"
 
 

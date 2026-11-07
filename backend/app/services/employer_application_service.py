@@ -38,6 +38,9 @@ TRANSITIONS: dict[ApplicationStatus, set[ApplicationStatus]] = {
         ApplicationStatus.rejected,
     },
     ApplicationStatus.offered: set(),
+    ApplicationStatus.offer_accepted: set(),
+    ApplicationStatus.offer_declined: set(),
+    ApplicationStatus.offer_revoked: set(),
     ApplicationStatus.rejected: set(),
 }
 
