@@ -12,7 +12,7 @@ from app.schemas.application import (
     EmployerApplicationDetailOut,
     EmployerApplicationOut,
 )
-from app.services import job_service, seeker_service
+from app.services import job_service, offer_service, seeker_service
 
 logger = logging.getLogger("talentlink.applications")
 
@@ -91,6 +91,7 @@ def _detail(
         application=_summary(application),
         seeker=seeker_service.seeker_profile(application.seeker),
         job=job_service.job_out(job, company),
+        offer=offer_service.offer_out(application.offer) if application.offer else None,
     )
 
 

@@ -9,7 +9,12 @@ from app.schemas.application import (
     EmployerApplicationDetailOut,
     EmployerApplicationOut,
 )
-from app.services import company_service, employer_application_service
+from app.schemas.offer import OfferCreate, OfferOut
+from app.services import (
+    company_service,
+    employer_application_service,
+    offer_service,
+)
 
 router = APIRouter(prefix="/employer/applications", tags=["企业投递"])
 
@@ -56,3 +61,32 @@ def update_application_status(
     return employer_application_service.update_status(
         db, company, application_id, payload
     )
+
+
+@router.post(
+    "/{application_id}/offer",
+    response_model=OfferOut,
+    summary="企业发放或修改录用通知",
+)
+def send_offer(
+    application_id: int,
+    payload: OfferCreate,
+    user: User = Depends(require_roles(Role.employer)),
+    db: Session = Depends(get_db),
+) -> OfferOut:
+    company = company_service.get_company_of(db, user)
+    return offer_service.send_offer(db, company, application_id, payload)
+
+
+@router.post(
+    "/{application_id}/offer/revoke",
+    response_model=OfferOut,
+    summary="企业撤回待响应录用通知",
+)
+def revoke_offer(
+    application_id: int,
+    user: User = Depends(require_roles(Role.employer)),
+    db: Session = Depends(get_db),
+) -> OfferOut:
+    company = company_service.get_company_of(db, user)
+    return offer_service.revoke_offer(db, company, application_id)
