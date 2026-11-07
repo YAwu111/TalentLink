@@ -22,6 +22,7 @@ export interface SeekerProfile {
   work_start: string
   work_end: string
   work_description: string
+  accepted_offer_id: number | null
   completeness: number
   is_complete: boolean
   missing_fields: string[]

@@ -1,5 +1,6 @@
 import http from './http'
 import type { ApplicationStatus, Job } from './jobs'
+import type { Offer } from './offers'
 import type { SeekerProfile } from './seeker'
 
 export interface EmployerApplicationSummary {
@@ -25,6 +26,7 @@ export interface EmployerApplicationDetail {
   application: EmployerApplicationSummary
   seeker: SeekerProfile
   job: Job
+  offer: Offer | null
 }
 
 export type EmployerStatusTarget = 'viewed' | 'interview' | 'rejected'

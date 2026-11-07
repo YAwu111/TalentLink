@@ -224,6 +224,10 @@ export function salaryText(min: number, max: number): string {
   return `最高 ${Math.round(max / 1000)}K`
 }
 
+export function offerSalaryText(value: number): string {
+  return value > 0 ? `${Math.round(value / 1000)}K` : '薪资待沟通'
+}
+
 export function splitSkills(skills: string): string[] {
   return skills
     .split(/[、,，;；\n]/)

@@ -6,6 +6,8 @@ export type ApplicationStatus =
   | 'viewed'
   | 'interview'
   | 'offered'
+  | 'offer_accepted'
+  | 'offer_declined'
   | 'rejected'
 
 export interface JobCompany {
@@ -139,6 +141,8 @@ export const APPLICATION_STATUS_META: Record<
   submitted: { label: '已投递', variant: 'info' },
   viewed: { label: '已查看', variant: 'warning' },
   interview: { label: '面试中', variant: 'teal' },
-  offered: { label: '已录用', variant: 'success' },
+  offered: { label: '已发录用', variant: 'success' },
+  offer_accepted: { label: '已接受录用', variant: 'success' },
+  offer_declined: { label: '已拒绝录用', variant: 'neutral' },
   rejected: { label: '未通过', variant: 'destructive' },
 }
