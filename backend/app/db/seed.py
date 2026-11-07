@@ -13,6 +13,8 @@ from app.models import (
     Company,
     Job,
     JobStatus,
+    Offer,
+    OfferStatus,
     Role,
     Seeker,
     User,
@@ -240,6 +242,23 @@ def ensure_demo(db: Session) -> None:
             ),
         ]
     )
+    db.flush()
+    offered_application = db.scalar(
+        select(Application).where(
+            Application.job_id == job_ops.id,
+            Application.seeker_id == seeker.id,
+        )
+    )
+    if offered_application is not None:
+        db.add(
+            Offer(
+                application_id=offered_application.id,
+                salary=10000,
+                start_date=date(2026, 12, 1),
+                message="欢迎加入，期待你的回复。",
+                status=OfferStatus.sent,
+            )
+        )
     db.commit()
 
 

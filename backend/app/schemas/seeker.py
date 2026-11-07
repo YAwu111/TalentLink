@@ -25,6 +25,7 @@ class SeekerProfile(BaseModel):
     work_start: str
     work_end: str
     work_description: str
+    accepted_offer_id: int | None
 
     completeness: int
     is_complete: bool

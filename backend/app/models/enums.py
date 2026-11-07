@@ -38,7 +38,16 @@ class ApplicationStatus(str, enum.Enum):
     viewed = "viewed"
     interview = "interview"
     offered = "offered"
+    offer_accepted = "offer_accepted"
+    offer_declined = "offer_declined"
     rejected = "rejected"
+
+
+class OfferStatus(str, enum.Enum):
+    sent = "sent"
+    accepted = "accepted"
+    declined = "declined"
+    revoked = "revoked"
 
 
 class DocumentCategory(str, enum.Enum):

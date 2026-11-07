@@ -42,6 +42,9 @@ class Seeker(Base, TimestampMixin):
     work_start: Mapped[str] = mapped_column(String(20), default="")
     work_end: Mapped[str] = mapped_column(String(20), default="")
     work_description: Mapped[str] = mapped_column(Text, default="")
+    accepted_offer_id: Mapped[int | None] = mapped_column(
+        Integer, unique=True, nullable=True
+    )
 
     user: Mapped["User"] = relationship(back_populates="seeker")
     applications: Mapped[List["Application"]] = relationship(

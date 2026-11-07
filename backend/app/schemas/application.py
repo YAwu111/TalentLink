@@ -4,6 +4,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from app.schemas.job import JobOut
+from app.schemas.offer import OfferOut
 from app.schemas.seeker import SeekerProfile
 
 
@@ -30,6 +31,7 @@ class EmployerApplicationDetailOut(BaseModel):
     application: EmployerApplicationOut
     seeker: SeekerProfile
     job: JobOut
+    offer: OfferOut | None = None
 
 
 class ApplicationStatusUpdate(BaseModel):

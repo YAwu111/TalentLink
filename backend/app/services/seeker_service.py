@@ -99,6 +99,7 @@ def seeker_profile(seeker: Seeker) -> SeekerProfile:
         work_start=seeker.work_start,
         work_end=seeker.work_end,
         work_description=seeker.work_description,
+        accepted_offer_id=seeker.accepted_offer_id,
         completeness=completeness,
         is_complete=is_complete,
         missing_fields=missing,
